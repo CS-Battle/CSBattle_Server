@@ -6,12 +6,11 @@ import lombok.Setter;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 
 @Entity
 @Getter
 @Setter
-public class Category {
+public class CsCategory {
     @javax.persistence.Id
     @GeneratedValue
     @Column(name = "category_id")

@@ -17,10 +17,10 @@ public class Question {
     private Long Id;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "type_id")
-    private Type type;
+    private QuestionType questionType;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
-    private Category category;
+    private CsCategory csCategory;
 
     private Integer timeLimit;
     private String content;

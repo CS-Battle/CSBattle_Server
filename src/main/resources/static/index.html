@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SSE Test Page</title>
+</head>
+
+<body>
+<input type="text" id="userId"/>
+<button type="button" onclick="connect()">sse 연결 시작</button>               <!--    버튼 클릭 시 서버로부터 이벤트 구독 시작-->
+<input type="text" id="answer" label="정답 입력"/>
+<button type="button" onclick="submit()">정답 제출</button>
+</body>
+</html>
+
+<script type="text/javascript">
+    var battleId = ""
+    var questionId = ""
+
+    function connect() {
+        const userId = document.getElementById("userId").value;
+
+        const eventSource = new EventSource(`http://localhost:8080/connect/`+userId);      // SSE 연결을 위한 js 제공 객체
+
+        eventSource.addEventListener("sse", function (event) {          // sse 연결 시작 이벤트
+            console.log("event.data : " + event.data);
+        })
+
+        eventSource.addEventListener(`battle-start`, e => {             // 배틀 시작 이벤트
+            const { data: battle_Id } = e;
+            console.log("battle started!! battle id : ", battle_Id);
+            alert("battle started!!");
+            battleId = battle_Id;
+
+            getQuestion();
+        })
+
+        eventSource.addEventListener(`answer-result`, e => {            // 정답 여부 알림 이벤트
+            const { data: answerResult } = e;
+            const answerResultJson = JSON.parse(answerResult);
+
+            console.log("answerResultJson : ", answerResultJson);
+
+            if(answerResultJson.isCorrect) {
+                alert(answerResultJson.userId + "님이 " + answerResultJson.questionId + "문제의 정답을 맞추셨습니다!");
+            }
+            else {
+                alert(answerResultJson.userId + "님이 " + answerResultJson.questionId + "문제를 틀리셨습니다 ㅜㅜ");
+            }
+        })
+    }
+
+    function submit() {
+        const userId = document.getElementById("userId").value;
+        const answer = document.getElementById("answer").value;
+
+        fetch(`http://localhost:8080/battle/answer`,{
+            headers: {
+                'Accept': "application/json, text/plain, */*",
+                'Content-Type': "application/json;charset=utf-8"
+            },
+            method: 'POST',
+            body: JSON.stringify({
+                battleId: battleId,
+                userId: userId,
+                questionId: questionId,
+                answer: answer
+            }),
+        })
+            .then((response) => response.json())
+            .then((result) => console.log("result after answer submit : ", result))
+    }
+
+    function getQuestion() {
+        const userId = document.getElementById("userId").value;
+
+        fetch(`http://localhost:8080/battle/one-question?` + new URLSearchParams({
+            battleId: battleId
+        }))
+            .then((response) => response.json())
+            .then((result) => {
+                console.log("result of getQuestion : ", result);
+                questionId = result.data?.questionId;
+                console.log("questionId : " + questionId);
+            })
+    }
+</script>

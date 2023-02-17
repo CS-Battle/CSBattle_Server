@@ -8,7 +8,7 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-public class Type {
+public class QuestionType {
     @Id
     @GeneratedValue
     @Column(name = "type_id")
