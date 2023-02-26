@@ -41,12 +41,22 @@
 
             console.log("answerResultJson : ", answerResultJson);
 
-            if(answerResultJson.isCorrect) {
+            if (answerResultJson.isCorrect) {
                 alert(answerResultJson.userId + "님이 " + answerResultJson.questionId + "문제의 정답을 맞추셨습니다!");
             }
             else {
                 alert(answerResultJson.userId + "님이 " + answerResultJson.questionId + "문제를 틀리셨습니다 ㅜㅜ");
             }
+        })
+
+        eventSource.addEventListener(`opponent-left`, e => {
+            const { data: message } = e;
+            alert(message);
+            location.reload();
+        })
+
+        eventSource.addEventListener(`checking-connection`, e => {
+            const { data: message } = e;
         })
     }
 

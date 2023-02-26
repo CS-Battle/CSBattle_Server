@@ -16,6 +16,8 @@ public class BattleService {
     private Map<String, Battle> battles = new ConcurrentHashMap<>();
 
     public void createBattle(BattleType type, Map<String, SseEmitter> clients) {
+        this.deleteZombieBattles();
+
         Battle battle = Battle.create(type, clients);
         String battleId = battle.getId();
 
@@ -33,7 +35,34 @@ public class BattleService {
         System.out.println("~~~ total battles.size : " + battles.size());
     }
 
+    public void deleteBattleById(String id) {
+        battles.remove(id);
+    }
+
     public Battle findBattleById(String id) {
         return battles.get(id);
+    }
+
+    public Battle findBattleOfUser(String userId) {
+        for (String battleId : battles.keySet()) {
+            Battle battle = battles.get(battleId);
+            for (String playerId : battle.getPlayers().keySet()) {
+                if (playerId == userId) {
+                    return battle;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void deleteZombieBattles() {
+        for (String battleId : battles.keySet()) {
+            Battle battle = battles.get(battleId);
+            for (String playerId : battle.getPlayers().keySet()) {
+                SseEmitter emitter = battle.getPlayers().get(playerId);
+                SseUtil.sendToClient(emitter,"checking-connection","checking connection");
+                break;
+            }
+        }
     }
 }
