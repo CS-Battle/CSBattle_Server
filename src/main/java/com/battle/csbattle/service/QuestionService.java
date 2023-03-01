@@ -3,15 +3,20 @@ package com.battle.csbattle.service;
 import com.battle.csbattle.battle.Battle;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.QuestionDto;
-import com.battle.csbattle.entity.Question;
 import com.battle.csbattle.entity.QuestionType;
-import lombok.NoArgsConstructor;
+import com.battle.csbattle.repository.QuestionRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
+
 @Service
-@NoArgsConstructor
+@RequiredArgsConstructor
+@Slf4j
 public class QuestionService {
 
+    private final QuestionRepository questionRepository;
     // TODO: 함수 작성
     public QuestionDto getOneQuestionByQuestionType(QuestionType questionType) {
         QuestionDto questionDto = new QuestionDto();
@@ -33,15 +38,36 @@ public class QuestionService {
                     .answer("답")
                     .build();
 
-            battle.addQuestion(question);
+            battle.addQuestion(question.getQuestionId(), question);
             returningQuestion = question;
         }
         else {
             System.out.println("*** 이 배틀의 문제 불러오기");
 
-            returningQuestion = battle.getQuestions().get(0);
+            Collection<QuestionDto> questionDtoCollection = battle.getQuestions().values();
+            ArrayList<QuestionDto> questionDtoList = new ArrayList<>(questionDtoCollection);
+            returningQuestion = questionDtoList.get(0);
         }
         return returningQuestion;
+    }
+
+    public Map<String, QuestionDto> getQuestions(Battle battle, int count){
+        Map<String,QuestionDto> returnQuestions = battle.getQuestions();
+
+        while(returnQuestions.size() < count){
+            QuestionDto question = QuestionDto.builder()           // TODO: 문제 DB (QuestionRepository)에서 문제 한개 불러오기 - 현재는 DB가 없기에, QuestionDto 를 생성해주는것으로 대신
+                    .questionId("question1")
+                    .content("문제를 풀어봐요")
+                    .answer("답")
+                    .build();
+            String questionId = question.getQuestionId();
+
+            if(!returnQuestions.containsKey(questionId)){
+                returnQuestions.put(questionId, question);
+            }
+        }
+
+        return returnQuestions;
     }
 
     public Boolean checkAnswer(Battle battle, AnswerDto answer) {        // 정답 여부 확인
