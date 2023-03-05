@@ -61,7 +61,6 @@ public class BattleService {
             for (String playerId : battle.getPlayers().keySet()) {
                 SseEmitter emitter = battle.getPlayers().get(playerId);
                 SseUtil.sendToClient(emitter,"checking-connection","checking connection");
-                break;
             }
         }
     }

@@ -10,8 +10,8 @@ public class SseUtil {
             emitter.send(SseEmitter.event()
                     .name(eventName)
                     .data(data));
-        } catch (IOException e) {
-            System.out.println("!!! IOException while sendToClient: " + e);
+        } catch (Exception e) {
+            System.out.println("!!! Exception while sendToClient: " + e);
         }
     }
 }
