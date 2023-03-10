@@ -3,6 +3,7 @@ package com.battle.csbattle.service;
 import com.battle.csbattle.battle.Battle;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.QuestionDto;
+import com.battle.csbattle.entity.Question;
 import com.battle.csbattle.entity.QuestionType;
 import com.battle.csbattle.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
@@ -53,13 +54,13 @@ public class QuestionService {
 
     public Map<String, QuestionDto> getQuestions(Battle battle, int count){
         Map<String,QuestionDto> returnQuestions = battle.getQuestions();
+        List<Question> questionList = questionRepository.findAll();
 
         while(returnQuestions.size() < count){
-            QuestionDto question = QuestionDto.builder()           // TODO: 문제 DB (QuestionRepository)에서 문제 한개 불러오기 - 현재는 DB가 없기에, QuestionDto 를 생성해주는것으로 대신
-                    .questionId("question1")
-                    .content("문제를 풀어봐요")
-                    .answer("답")
-                    .build();
+            Random random = new Random();
+            int index = random.nextInt(questionList.size());
+
+            QuestionDto question = QuestionDto.from(questionList.get(index));
             String questionId = question.getQuestionId();
 
             if(!returnQuestions.containsKey(questionId)){
