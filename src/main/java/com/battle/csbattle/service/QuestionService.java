@@ -52,25 +52,37 @@ public class QuestionService {
         return returningQuestion;
     }
 
-    public Map<String, QuestionDto> getQuestions(Battle battle, int count){
-        Map<String,QuestionDto> returnQuestions = battle.getQuestions();
-        List<Question> questionList = questionRepository.findAll();
+    public ArrayList<QuestionDto> getQuestions(Battle battle, int count){
+        Map<String,QuestionDto> questionMap = battle.getQuestions();
+        ArrayList<Question> questionList = new ArrayList<>();
+        ArrayList<QuestionDto> returnQuestions;
 
-        while(returnQuestions.size() < count){
+        // 데이터베이스와 문제 연결 필요
+        for(int i = 0; i < 50; i++){
+            Question question1 = new Question();
+            question1.setId((long) i);
+            question1.setContent("content" + i);
+            question1.setAnswer("answer" + i);
+            questionList.add(question1);
+        }
+
+        while(questionMap.size() < count){
             Random random = new Random();
             int index = random.nextInt(questionList.size());
 
             QuestionDto question = QuestionDto.from(questionList.get(index));
             String questionId = question.getQuestionId();
 
-            if(!returnQuestions.containsKey(questionId)){
-                returnQuestions.put(questionId, question);
+            if(!questionMap.containsKey(questionId)){
+                questionMap.put(questionId, question);
+                questionList.remove(index);
             }
         }
 
+        battle.setQuestions(questionMap);
+        returnQuestions = new ArrayList(questionMap.values());
         return returnQuestions;
     }
-
     public Boolean checkAnswer(Battle battle, AnswerDto answer) {        // 정답 여부 확인
         QuestionDto question = battle.getQuestions().get(0);            // TODO: 여기 변경
 

@@ -9,12 +9,16 @@ import com.battle.csbattle.response.StatusEnum;
 import com.battle.csbattle.service.BattleService;
 import com.battle.csbattle.service.QuestionService;
 import com.battle.csbattle.util.SseUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.List;
+
 @RestController
+@Slf4j
 public class BattleController {
     private final BattleService battleService;
     private final QuestionService questionService;
@@ -27,7 +31,13 @@ public class BattleController {
     @GetMapping("/battle/one-question")
     public ResponseEntity<Response> question(@RequestParam("battleId") String battleId) {
         Battle battle = battleService.findBattleById(battleId);
-        QuestionDto question = questionService.getOneQuestion(battle);
+
+        // 예제
+        List<QuestionDto> questions = questionService.getQuestions(battle, 4);
+        log.info("questionSize : " + questions.size());
+        QuestionDto question = questions.get(0);
+        log.info("questionInfo : " + question.getQuestionId() + ", " + question.getContent() +
+                ", " + question.getAnswer());
 
         Response body = Response.builder()
                 .status(StatusEnum.OK)
