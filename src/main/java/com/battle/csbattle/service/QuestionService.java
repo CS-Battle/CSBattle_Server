@@ -83,8 +83,8 @@ public class QuestionService {
         returnQuestions = new ArrayList(questionMap.values());
         return returnQuestions;
     }
-    public Boolean checkAnswer(Battle battle, AnswerDto answer) {        // 정답 여부 확인
-        QuestionDto question = battle.getQuestions().get(0);            // TODO: 여기 변경
+    public Boolean checkAnswer(Battle battle, String QuestionId, AnswerDto answer) {        // 정답 여부 확인
+        QuestionDto question = battle.getQuestions().get(QuestionId);
 
         Boolean isCorrect = false;
         if(question.getAnswer().equals(answer.getAnswer())){ isCorrect = true; }

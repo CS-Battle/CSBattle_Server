@@ -32,12 +32,9 @@ public class BattleController {
     public ResponseEntity<Response> question(@RequestParam("battleId") String battleId) {
         Battle battle = battleService.findBattleById(battleId);
 
-        // 예제
+        // 임시
         List<QuestionDto> questions = questionService.getQuestions(battle, 4);
-        log.info("questionSize : " + questions.size());
         QuestionDto question = questions.get(0);
-        log.info("questionInfo : " + question.getQuestionId() + ", " + question.getContent() +
-                ", " + question.getAnswer());
 
         Response body = Response.builder()
                 .status(StatusEnum.OK)
@@ -53,7 +50,8 @@ public class BattleController {
         System.out.println("=== battle id : " + answer.getBattleId() + ", user : " + answer.getUserId() + ", questionId: " + answer.getQuestionId() + ", answer : " + answer.getAnswer());
 
         Battle battle = battleService.findBattleById(answer.getBattleId());
-        Boolean isCorrect = questionService.checkAnswer(battle, answer);
+
+        Boolean isCorrect = questionService.checkAnswer(battle, answer.getQuestionId(), answer);
 
         for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
             SseEmitter emitter = battle.getPlayers().get(key);
