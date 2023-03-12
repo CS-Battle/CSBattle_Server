@@ -25,46 +25,27 @@ public class QuestionService {
         return questionDto;
     }
 
-    // TODO: 1. getOneQuestion -> getQuestion 으로 변경
-    //       2. battle 뒤에 인자로 count 추가해서 count 개만큼 문제 불러오는 함수로 변경
     public QuestionDto getOneQuestion(Battle battle) {              // 한문제배틀 문제 불러오기 (해당 battle 에 대해 출제해줄 문제 선정)
-        QuestionDto returningQuestion;
+        Map<String,QuestionDto> battleQuestion = battle.getQuestions();
+        List<Question> questions = questionRepository.findAll();
 
-        if (battle.getQuestions().isEmpty()) {
-            System.out.println("*** 이 배틀의 문제 생성");
+        Random random = new Random();
+        int index = random.nextInt(questions.size());
 
-            QuestionDto question = QuestionDto.builder()           // TODO: 문제 DB (QuestionRepository)에서 문제 한개 불러오기 - 현재는 DB가 없기에, QuestionDto 를 생성해주는것으로 대신
-                    .questionId("question1")
-                    .content("문제를 풀어봐요")
-                    .answer("답")
-                    .build();
-
-            battle.addQuestion(question.getQuestionId(), question);
-            returningQuestion = question;
+        if(battleQuestion.size() != 0) {
+            while(!battleQuestion.containsKey(questions.get(index).getId())){
+                index = random.nextInt(questions.size());
+                questions.remove(index);
+            }
         }
-        else {
-            System.out.println("*** 이 배틀의 문제 불러오기");
 
-            Collection<QuestionDto> questionDtoCollection = battle.getQuestions().values();
-            ArrayList<QuestionDto> questionDtoList = new ArrayList<>(questionDtoCollection);
-            returningQuestion = questionDtoList.get(0);
-        }
-        return returningQuestion;
+        return QuestionDto.from(questions.get(index));
     }
 
-    public ArrayList<QuestionDto> getQuestions(Battle battle, int count){
+    public void getQuestions(Battle battle, int count){
         Map<String,QuestionDto> questionMap = battle.getQuestions();
-        ArrayList<Question> questionList = new ArrayList<>();
-        ArrayList<QuestionDto> returnQuestions;
-
-        // 데이터베이스와 문제 연결 필요
-        for(int i = 0; i < 50; i++){
-            Question question1 = new Question();
-            question1.setId((long) i);
-            question1.setContent("content" + i);
-            question1.setAnswer("answer" + i);
-            questionList.add(question1);
-        }
+        List<Question> questionList = questionRepository.findAll();
+        count += questionMap.size();
 
         while(questionMap.size() < count){
             Random random = new Random();
@@ -80,11 +61,9 @@ public class QuestionService {
         }
 
         battle.setQuestions(questionMap);
-        returnQuestions = new ArrayList(questionMap.values());
-        return returnQuestions;
     }
-    public Boolean checkAnswer(Battle battle, String QuestionId, AnswerDto answer) {        // 정답 여부 확인
-        QuestionDto question = battle.getQuestions().get(QuestionId);
+    public Boolean checkAnswer(Long questionId, AnswerDto answer) {        // 정답 여부 확인
+        Question question = questionRepository.findById(questionId).get();
 
         Boolean isCorrect = false;
         if(question.getAnswer().equals(answer.getAnswer())){ isCorrect = true; }
