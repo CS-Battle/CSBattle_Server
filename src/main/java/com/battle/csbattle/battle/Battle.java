@@ -16,6 +16,7 @@ public class Battle {
     private BattleType type;                                            // 배틀 유형
     private Map<String, SseEmitter> players = new HashMap<>();          // 참여 중인 플레이어
     private Map<String, QuestionDto> questions = new HashMap<>();       // 이 배틀에서의 문제 목록 (배틀 참여자들은 모두 동일한 문제를 풀어야 하기에 필요)
+    private Map<String, Integer> ongoingQuestions = new HashMap<>();    // 현제 풀고 있는 문제의 인덱스
 
     public static Battle create(BattleType type, Map<String, SseEmitter> clients) {
         Battle battle = new Battle();
@@ -23,6 +24,7 @@ public class Battle {
         battle.type = type;
         for (String key : clients.keySet()) {
             battle.players.put(key,clients.get(key));
+            battle.ongoingQuestions.put(key,0);
         }
         return battle;
     }
