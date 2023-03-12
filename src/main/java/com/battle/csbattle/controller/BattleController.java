@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @Slf4j
@@ -29,16 +29,38 @@ public class BattleController {
     }
 
     @GetMapping("/battle/one-question")
-    public ResponseEntity<Response> question(@RequestParam("battleId") String battleId) {
+    public ResponseEntity<Response> oneQuestion(@RequestParam("battleId") String battleId) {
         Battle battle = battleService.findBattleById(battleId);
 
-        // 임시
-        List<QuestionDto> questions = questionService.getQuestions(battle, 4);
-        QuestionDto question = questions.get(0);
+        QuestionDto question = questionService.getOneQuestion(battle);
 
         Response body = Response.builder()
                 .status(StatusEnum.OK)
                 .data(question)
+                .message("get question success")
+                .build();
+        return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
+    }
+
+    @GetMapping("/battle/questions")
+    public ResponseEntity<Response> Question(
+            @RequestParam("battleId") String battleId, @RequestParam("count") int count) {
+        Battle battle = battleService.findBattleById(battleId);
+
+        questionService.getQuestions(battle, count);
+        Map<String, QuestionDto> questions = battle.getQuestions();
+
+        // count 만큼 현제 문제 수 변화 테스트 부분
+        Map<String, Integer> ongoingQuestions = battle.getOngoingQuestions();
+        for (String key : battle.getPlayers().keySet()) {
+            ongoingQuestions.replace(key, ongoingQuestions.get(key) + count);
+        }
+
+
+
+        Response body = Response.builder()
+                .status(StatusEnum.OK)
+                .data(questions)
                 .message("get question success")
                 .build();
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
@@ -51,7 +73,7 @@ public class BattleController {
 
         Battle battle = battleService.findBattleById(answer.getBattleId());
 
-        Boolean isCorrect = questionService.checkAnswer(battle, answer.getQuestionId(), answer);
+        Boolean isCorrect = questionService.checkAnswer(Long.parseLong(answer.getQuestionId()), answer);
 
         for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
             SseEmitter emitter = battle.getPlayers().get(key);
@@ -69,4 +91,6 @@ public class BattleController {
                 .build();
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
+
+
 }
