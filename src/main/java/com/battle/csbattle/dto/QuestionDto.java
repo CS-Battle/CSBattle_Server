@@ -1,5 +1,6 @@
 package com.battle.csbattle.dto;
 
+import com.battle.csbattle.entity.Question;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,5 +19,13 @@ public class QuestionDto {
         this.questionId = questionId;
         this.content = content;
         this.answer = answer;
+    }
+
+    public static QuestionDto from(Question question){
+        return QuestionDto.builder()
+                .questionId(question.getId().toString())
+                .content(question.getContent())
+                .answer(question.getAnswer())
+                .build();
     }
 }
