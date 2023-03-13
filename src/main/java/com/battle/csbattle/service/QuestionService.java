@@ -26,7 +26,7 @@ public class QuestionService {
     }
 
     public QuestionDto getOneQuestion(Battle battle) {              // 한 문제 불러오기 (해당 battle 에 대해 출제해줄 문제 선정)
-        Map<String,QuestionDto> battleQuestion = battle.getQuestions();
+        Map<Long,QuestionDto> battleQuestion = battle.getQuestions();
         List<Question> questions = questionRepository.findAll();
 
         Random random = new Random();
@@ -46,7 +46,7 @@ public class QuestionService {
     }
 
     public void getQuestions(Battle battle, int count){
-        Map<String,QuestionDto> questionMap = battle.getQuestions();
+        Map<Long,QuestionDto> questionMap = battle.getQuestions();
         List<Question> questionList = questionRepository.findAll();
         count += questionMap.size();
 
@@ -55,7 +55,7 @@ public class QuestionService {
             int index = random.nextInt(questionList.size());
 
             QuestionDto question = QuestionDto.from(questionList.get(index));
-            String questionId = question.getQuestionId();
+            Long questionId = question.getQuestionId();
 
             if(!questionMap.containsKey(questionId)){
                 questionMap.put(questionId, question);
