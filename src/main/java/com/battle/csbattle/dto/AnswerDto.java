@@ -11,11 +11,11 @@ import lombok.Setter;
 public class AnswerDto {
     private String battleId;
     private String userId;
-    private String questionId;
+    private Long questionId;
     private String answer;
 
     @Builder
-    public AnswerDto(String battleId, String userId, String questionId, String answer) {
+    public AnswerDto(String battleId, String userId, Long questionId, String answer) {
         this.battleId = battleId;
         this.userId = userId;
         this.questionId = questionId;

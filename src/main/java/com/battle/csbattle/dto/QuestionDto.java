@@ -10,12 +10,12 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class QuestionDto {
-    private String questionId;
+    private Long questionId;
     private String content;
     private String answer;
 
     @Builder
-    public QuestionDto(String questionId, String content, String answer) {
+    public QuestionDto(Long questionId, String content, String answer) {
         this.questionId = questionId;
         this.content = content;
         this.answer = answer;
@@ -23,7 +23,7 @@ public class QuestionDto {
 
     public static QuestionDto from(Question question){
         return QuestionDto.builder()
-                .questionId(question.getId().toString())
+                .questionId(question.getId())
                 .content(question.getContent())
                 .answer(question.getAnswer())
                 .build();
