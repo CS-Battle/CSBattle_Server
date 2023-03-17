@@ -1,9 +1,11 @@
 package com.battle.csbattle.controller;
 
 import com.battle.csbattle.battle.Battle;
+import com.battle.csbattle.battle.BattleType;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.AnswerResultDto;
 import com.battle.csbattle.dto.QuestionDto;
+import com.battle.csbattle.dto.UserDto;
 import com.battle.csbattle.response.Response;
 import com.battle.csbattle.response.StatusEnum;
 import com.battle.csbattle.service.BattleService;
@@ -16,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @Slf4j
@@ -59,10 +61,11 @@ public class BattleController {
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
 
-    @GetMapping("/battle/question/{index}")
-    public ResponseEntity<Response> getQuestion(
-            @RequestParam("battleId") String battleId, @PathVariable int index){
+    @GetMapping("/battle/question")
+    public ResponseEntity<Response> getQuestion(@RequestParam("battleId") String battleId){
         Battle battle = battleService.findBattleById(battleId);
+
+        Integer index = battle.getOngoingQuestions().values().stream().findFirst().get();
         QuestionDto question = battle.getQuestions().get(index);
 
         Response body = Response.builder()
@@ -73,8 +76,9 @@ public class BattleController {
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
 
-    @PostMapping("/battle/answer")
-    public ResponseEntity<Response> answer(@RequestBody AnswerDto answer) {
+    @PostMapping("/battle/answer/")
+    public ResponseEntity<Response> answer(
+            @RequestBody AnswerDto answer) {
         System.out.println("=== answer submited");
         System.out.println("=== battle id : " + answer.getBattleId() + ", user : " + answer.getUserId() + ", questionId: " + answer.getQuestionId() + ", answer : " + answer.getAnswer());
 
@@ -88,6 +92,16 @@ public class BattleController {
                     .questionId(answer.getQuestionId().toString())
                     .isCorrect(isCorrect)
                     .build());
+        }
+
+        if(isCorrect){
+            if(battle.getType() == BattleType.GOTOEND){
+                battle.increasingIndexOfOngoingQuestion(answer.getUserId());
+            }else{
+                for (String key : battle.getPlayers().keySet()) {
+                    battle.increasingIndexOfOngoingQuestion(key);
+                }
+            }
         }
 
         Response body = Response.builder()

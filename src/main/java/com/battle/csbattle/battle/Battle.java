@@ -35,4 +35,6 @@ public class Battle {
     public void deletePlayerById(String id){
         this.players.remove(id);
     }
+
+    public void increasingIndexOfOngoingQuestion(String userId){ ongoingQuestions.put(userId, ongoingQuestions.get(userId) + 1);}
 }
