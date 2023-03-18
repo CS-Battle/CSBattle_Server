@@ -45,24 +45,23 @@ public class QuestionService {
     }
 
     public void addQuestionsToBattle(Battle battle, int count){
-        List<QuestionDto> questionMap = battle.getQuestions();
+        List<QuestionDto> questions = battle.getQuestions();
         List<Question> questionList = questionRepository.findAll();
-        count += questionMap.size();
+        count += questions.size();
 
-        while(questionMap.size() < count){
+        while(questions.size() < count){
             Random random = new Random();
             int index = random.nextInt(questionList.size());
 
             QuestionDto question = QuestionDto.from(questionList.get(index));
-            Long questionId = question.getQuestionId();
 
-            if(!questionMap.contains(questionId)){
-                questionMap.add(question);
+            if(!questions.contains(question)){
+                questions.add(question);
                 questionList.remove(index);
             }
         }
 
-        battle.setQuestions(questionMap);
+        battle.setQuestions(questions);
     }
     public Boolean checkAnswer(Long questionId, AnswerDto answer) {
         Question question = questionRepository.findById(questionId).get();
