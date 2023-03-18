@@ -28,4 +28,14 @@ public class QuestionDto {
                 .answer(question.getAnswer())
                 .build();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        QuestionDto questionDto = (QuestionDto) obj;
+
+        if(questionDto.getQuestionId() == this.questionId){
+            return true;
+        }
+        return false;
+    }
 }

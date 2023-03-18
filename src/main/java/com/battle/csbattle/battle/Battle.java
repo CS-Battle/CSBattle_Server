@@ -5,7 +5,6 @@ import com.battle.csbattle.dto.UserDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.*;
 
@@ -17,7 +16,7 @@ public class Battle {
     private BattleType type;                                            // 배틀 유형
     private BattleStatus battleStatus;
     private Map<String, UserDto> players = new HashMap<>();          // 참여 중인 플레이어
-    private Map<Long, QuestionDto> questions = new HashMap<>();       // 이 배틀에서의 문제 목록 (배틀 참여자들은 모두 동일한 문제를 풀어야 하기에 필요)
+    private List<QuestionDto> questions = new ArrayList<>();       // 이 배틀에서의 문제 목록 (배틀 참여자들은 모두 동일한 문제를 풀어야 하기에 필요)
     private Map<String, Integer> ongoingQuestions = new HashMap<>();    // 현제 풀고 있는 문제의 인덱스
 
     public static Battle create(BattleType type, Map<String, UserDto> players) {
@@ -32,8 +31,8 @@ public class Battle {
         return battle;
     }
 
-    public void addQuestion(Long questionKey,QuestionDto questionDto) {
-        this.questions.put(questionKey, questionDto);
+    public void addQuestion(QuestionDto questionDto) {
+        this.questions.add(questionDto);
     }
     public void deletePlayerById(String id){
         UserDto player = this.players.get(id);
@@ -41,4 +40,6 @@ public class Battle {
         player.setOpponent(null);
         this.players.remove(id);
     }
+
+    public void increasingIndexOfOngoingQuestion(String userId){ ongoingQuestions.put(userId, ongoingQuestions.get(userId) + 1);}
 }
