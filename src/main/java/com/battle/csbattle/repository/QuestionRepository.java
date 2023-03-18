@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     Optional<Question> findById(Long Id);
     Long countBy();
-    @Query(value = "SELECT * FROM Question order by RAND() limit 1",nativeQuery = true)
+    @Query(value = "SELECT * FROM question order by RAND() limit 1",nativeQuery = true)
     Question findRandomOne();
 
     List<Question> findAll();

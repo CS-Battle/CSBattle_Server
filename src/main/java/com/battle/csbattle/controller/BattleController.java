@@ -1,6 +1,7 @@
 package com.battle.csbattle.controller;
 
 import com.battle.csbattle.battle.Battle;
+import com.battle.csbattle.battle.BattleStatus;
 import com.battle.csbattle.battle.BattleType;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.AnswerResultDto;
@@ -46,7 +47,7 @@ public class BattleController {
     }
 
     @GetMapping("/battle/questions")
-    public ResponseEntity<Response> questions(
+    public ResponseEntity<Response> Question(
             @RequestParam("battleId") String battleId, @RequestParam("count") int count) {
         Battle battle = battleService.findBattleById(battleId);
 
@@ -62,7 +63,7 @@ public class BattleController {
     }
 
     @GetMapping("/battle/question")
-    public ResponseEntity<Response> getQuestion(@RequestParam("battleId") String battleId){
+    public ResponseEntity<Response> getQuestion(@RequestParam("battleId") String battleId) {
         Battle battle = battleService.findBattleById(battleId);
 
         Integer index = battle.getOngoingQuestions().values().stream().findFirst().get();
@@ -81,34 +82,43 @@ public class BattleController {
             @RequestBody AnswerDto answer) {
         System.out.println("=== answer submited");
         System.out.println("=== battle id : " + answer.getBattleId() + ", user : " + answer.getUserId() + ", questionId: " + answer.getQuestionId() + ", answer : " + answer.getAnswer());
+        Response body;
 
         Battle battle = battleService.findBattleById(answer.getBattleId());
-        Boolean isCorrect = questionService.checkAnswer(answer.getQuestionId(), answer);
 
-        for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
-            SseEmitter emitter = battle.getPlayers().get(key).getEmitter();
-            SseUtil.sendToClient(emitter,"answer-result", AnswerResultDto.builder()
-                    .userId(answer.getUserId())
-                    .questionId(answer.getQuestionId().toString())
-                    .isCorrect(isCorrect)
-                    .build());
-        }
+        if (battle.getBattleStatus() == BattleStatus.AbleAnswer) {
+            Boolean isCorrect = questionService.checkAnswer(answer.getQuestionId(), answer);
 
-        if(isCorrect){
-            if(battle.getType() == BattleType.GOTOEND){
-                battle.increasingIndexOfOngoingQuestion(answer.getUserId());
-            }else{
-                for (String key : battle.getPlayers().keySet()) {
-                    battle.increasingIndexOfOngoingQuestion(key);
+            for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
+                SseEmitter emitter = battle.getPlayers().get(key).getEmitter();
+                SseUtil.sendToClient(emitter, "answer-result", AnswerResultDto.builder()
+                        .userId(answer.getUserId())
+                        .questionId(answer.getQuestionId().toString())
+                        .isCorrect(isCorrect)
+                        .build());
+            }
+
+            if (isCorrect) {
+                if (battle.getType() == BattleType.GOTOEND) {
+                    battle.increasingIndexOfOngoingQuestion(answer.getUserId());
+                } else {
+                    for (String key : battle.getPlayers().keySet()) {
+                        battle.increasingIndexOfOngoingQuestion(key);
+                    }
                 }
             }
-        }
 
-        Response body = Response.builder()
-                .status(StatusEnum.OK)
-                .data("answer submit success")
-                .message("answer submit success")
-                .build();
+            body = Response.builder()
+                    .status(StatusEnum.OK)
+                    .data("answer submit success")
+                    .message("answer submit success")
+                    .build();
+        } else {
+            body = Response.builder()
+                    .status(StatusEnum.BAD_REQUEST)
+                    .message("get question failed")
+                    .build();
+        }
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
 }
