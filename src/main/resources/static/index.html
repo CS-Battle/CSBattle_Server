@@ -29,10 +29,12 @@
         eventSource.addEventListener(`battle-start`, e => {             // 배틀 시작 이벤트
             const { data: battle_Id } = e;
             console.log("battle started!! battle id : ", battle_Id);
-            alert("battle started!!");
             battleId = battle_Id;
-
             getQuestion();
+            alert("battle started!!");
+
+
+
         })
 
         eventSource.addEventListener(`answer-result`, e => {            // 정답 여부 알림 이벤트
@@ -57,6 +59,13 @@
 
         eventSource.addEventListener(`checking-connection`, e => {
             const { data: message } = e;
+        })
+
+        eventSource.addEventListener('Question',e=>{
+           const {data:questionJson}=e;
+           const question=JSON.parse(questionJson);
+           console.log("ID : ",question.questionId,"문제 : ",question.content);
+           questionId=question.questionId;
         })
     }
 
@@ -85,13 +94,12 @@
         const userId = document.getElementById("userId").value;
 
         fetch(`http://localhost:8080/battle/one-question?` + new URLSearchParams({
-            battleId: battleId
+            battleId: battleId,
+            userId:userId
         }))
             .then((response) => response.json())
             .then((result) => {
-                console.log("result of getQuestion : ", result);
-                questionId = result.data?.questionId;
-                console.log("questionId : " + questionId);
+                alert(result.message)
             })
     }
 </script>

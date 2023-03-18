@@ -1,6 +1,7 @@
 package com.battle.csbattle.controller;
 
 import com.battle.csbattle.battle.Battle;
+import com.battle.csbattle.battle.BattleStatus;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.AnswerResultDto;
 import com.battle.csbattle.dto.QuestionDto;
@@ -29,15 +30,16 @@ public class BattleController {
     }
 
     @GetMapping("/battle/one-question")
-    public ResponseEntity<Response> oneQuestion(@RequestParam("battleId") String battleId) {
+    public ResponseEntity<Response> oneQuestion(@RequestParam("battleId") String battleId,
+                                                @RequestParam("userId") String userId) {
         Battle battle = battleService.findBattleById(battleId);
 
-        QuestionDto question = questionService.getOneQuestion(battle);
+//        QuestionDto question = questionService.getOneQuestion(battle);
 
+        String message=questionService.oneQuestionAndResponse(battle,userId);
         Response body = Response.builder()
                 .status(StatusEnum.OK)
-                .data(question)
-                .message("get question success")
+                .message(message)
                 .build();
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
@@ -47,20 +49,23 @@ public class BattleController {
             @RequestParam("battleId") String battleId, @RequestParam("count") int count) {
         Battle battle = battleService.findBattleById(battleId);
 
-        questionService.getQuestions(battle, count);
-        Map<Long, QuestionDto> questions = battle.getQuestions();
 
-        // count 만큼 현제 문제 수 변화 테스트 부분
-        Map<String, Integer> ongoingQuestions = battle.getOngoingQuestions();
-        for (String key : battle.getPlayers().keySet()) {
-            ongoingQuestions.replace(key, ongoingQuestions.get(key) + count);
-        }
+            questionService.getQuestions(battle, count);
+            Map<Long, QuestionDto> questions = battle.getQuestions();
 
-        Response body = Response.builder()
-                .status(StatusEnum.OK)
-                .data(questions)
-                .message("get question success")
-                .build();
+            // count 만큼 현제 문제 수 변화 테스트 부분
+            Map<String, Integer> ongoingQuestions = battle.getOngoingQuestions();
+            for (String key : battle.getPlayers().keySet()) {
+                ongoingQuestions.replace(key, ongoingQuestions.get(key) + count);
+            }
+
+            Response body = Response.builder()
+                    .status(StatusEnum.OK)
+                    .data(questions)
+                    .message("get question success")
+                    .build();
+
+
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
 
@@ -68,9 +73,11 @@ public class BattleController {
     public ResponseEntity<Response> answer(@RequestBody AnswerDto answer) {
         System.out.println("=== answer submited");
         System.out.println("=== battle id : " + answer.getBattleId() + ", user : " + answer.getUserId() + ", questionId: " + answer.getQuestionId() + ", answer : " + answer.getAnswer());
+        Response body;
 
         Battle battle = battleService.findBattleById(answer.getBattleId());
 
+        if (battle.getBattleStatus()== BattleStatus.AbleAnswer) {
         Boolean isCorrect = questionService.checkAnswer(answer.getQuestionId(), answer);
 
         for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
@@ -82,11 +89,17 @@ public class BattleController {
                     .build());
         }
 
-        Response body = Response.builder()
+        body = Response.builder()
                 .status(StatusEnum.OK)
                 .data("answer submit success")
                 .message("answer submit success")
                 .build();
+        }else{
+            body = Response.builder()
+                    .status(StatusEnum.BAD_REQUEST)
+                    .message("get question failed")
+                    .build();
+        }
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
 }
