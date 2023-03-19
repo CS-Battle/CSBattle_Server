@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Objects;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -39,9 +41,6 @@ public class QuestionDto {
     public boolean equals(Object obj) {
         QuestionDto questionDto = (QuestionDto) obj;
 
-        if(questionDto.getQuestionId() == this.questionId){
-            return true;
-        }
-        return false;
+        return Objects.equals(questionDto.getQuestionId(), this.questionId);
     }
 }
