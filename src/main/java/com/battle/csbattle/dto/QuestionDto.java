@@ -29,6 +29,12 @@ public class QuestionDto {
                 .build();
     }
 
+    public static QuestionDto clientForm(QuestionDto questionDto){
+        return QuestionDto.builder()
+                .content(questionDto.getContent())
+                .build();
+    }
+
     @Override
     public boolean equals(Object obj) {
         QuestionDto questionDto = (QuestionDto) obj;
