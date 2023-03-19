@@ -50,7 +50,7 @@ public class SseService {
 
                 System.out.println(onGoingBattle.getPlayers());
 
-                if (onGoingBattle.getPlayers().size() == 0) {
+                if (onGoingBattle.getPlayers().size() == 1) {
                     battleService.deleteBattleById(onGoingBattle.getId());
                 }
             }
