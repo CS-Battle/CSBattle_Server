@@ -28,21 +28,6 @@ public class QuestionService {
         return questionDto;
     }
 
-    public String oneQuestionAndResponse(Battle battle,String userId){
-        battle.setBattleStatus(BattleStatus.AbleAnswer);
-
-        QuestionDto questionDto = getQuestionByUserIndex(battle, userId);
-        SseUtil.sendToClient(battle.getPlayers().get(userId).getEmitter(),"Question",questionDto);
-
-        try {
-            Thread.sleep(1000*10);
-        }catch (InterruptedException e){
-            System.out.println(e.getMessage());
-        }
-        battle.setBattleStatus(BattleStatus.Gaming);
-        return "제한시간이 만료되었습니다.";
-    }
-
     public QuestionDto getQuestionByUserIndex(Battle battle, String userId){
         Integer index = battle.getOngoingQuestions().get(userId);
         List<QuestionDto> questions = battle.getQuestions();

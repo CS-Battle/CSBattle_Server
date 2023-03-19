@@ -6,7 +6,6 @@ import com.battle.csbattle.battle.BattleType;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.AnswerResultDto;
 import com.battle.csbattle.dto.QuestionDto;
-import com.battle.csbattle.dto.UserDto;
 import com.battle.csbattle.response.Response;
 import com.battle.csbattle.response.StatusEnum;
 import com.battle.csbattle.service.BattleService;
@@ -18,8 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @Slf4j
@@ -32,55 +29,43 @@ public class BattleController {
         this.questionService = questionService;
     }
 
-    @GetMapping("/battle/one-question")
-    public ResponseEntity<Response> oneQuestion(@RequestParam("battleId") String battleId) {
-        Battle battle = battleService.findBattleById(battleId);
-
-        QuestionDto question = questionService.getOneQuestion(battle);
-
-        Response body = Response.builder()
-                .status(StatusEnum.OK)
-                .data(question)
-                .message("get question success")
-                .build();
-        return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
-    }
-
-    @GetMapping("/battle/questions")
-    public ResponseEntity<Response> Question(
-            @RequestParam("battleId") String battleId, @RequestParam("count") int count) {
-        Battle battle = battleService.findBattleById(battleId);
-
-        questionService.addQuestionsToBattle(battle, count);
-        List<QuestionDto> questions = battle.getQuestions();
-
-        Response body = Response.builder()
-                .status(StatusEnum.OK)
-                .data(questions)
-                .message("add question to battle success")
-                .build();
-        return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
-    }
-
     @GetMapping("/battle/question")
-    public ResponseEntity<Response> getQuestion(@RequestParam("battleId") String battleId) {
+    public ResponseEntity<Response> getQuestion(
+            @RequestParam("battleId") String battleId, @RequestParam("userId") String userId)
+    {
+        log.info("question : " + battleId);
         Battle battle = battleService.findBattleById(battleId);
 
-        Integer index = battle.getOngoingQuestions().values().stream().findFirst().get();
-        QuestionDto question = battle.getQuestions().get(index);
+        QuestionDto questionDto = questionService.getQuestionByUserIndex(battle, userId);
+        SseUtil.sendToClient(battle.getPlayers().get(userId).getEmitter(),"Question",questionDto);
+
+
+        Thread thread = new Thread(() ->{
+            try {
+                Thread.sleep(1000*10);
+            }catch (InterruptedException e){
+                System.out.println(e.getMessage());
+            }
+            log.info("제한시간 만료");
+            battle.setBattleStatus(BattleStatus.Gaming);
+            SseUtil.sendToClient(battle.getPlayers().get(userId).getEmitter(),"timeLimit","제한시간이 만료되었습니다.");
+
+        });
+        thread.start();
+
 
         Response body = Response.builder()
                 .status(StatusEnum.OK)
-                .data(question)
-                .message("get question success")
+                .message("Get Question Success")
+                .data(questionDto)
                 .build();
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
 
-    @PostMapping("/battle/answer/")
+    @PostMapping("/battle/answer")
     public ResponseEntity<Response> answer(
             @RequestBody AnswerDto answer) {
-        System.out.println("=== answer submited");
+        System.out.println("=== answer submitted");
         System.out.println("=== battle id : " + answer.getBattleId() + ", user : " + answer.getUserId() + ", questionId: " + answer.getQuestionId() + ", answer : " + answer.getAnswer());
         Response body;
 

@@ -67,6 +67,11 @@
            console.log("ID : ",question.questionId,"문제 : ",question.content);
            questionId=question.questionId;
         })
+
+        eventSource.addEventListener('timeLimit',e=>{
+            const {data:timelimit}=e;
+            alert(timelimit)
+        })
     }
 
     function submit() {
@@ -93,13 +98,13 @@
     function getQuestion() {
         const userId = document.getElementById("userId").value;
 
-        fetch(`http://localhost:8080/battle/one-question?` + new URLSearchParams({
+        fetch(`http://localhost:8080/battle/question?` + new URLSearchParams({
             battleId: battleId,
             userId:userId
         }))
             .then((response) => response.json())
             .then((result) => {
-                alert(result.message)
+
             })
     }
 </script>
