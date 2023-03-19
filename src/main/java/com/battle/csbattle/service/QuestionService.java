@@ -1,16 +1,14 @@
 package com.battle.csbattle.service;
 
 import com.battle.csbattle.battle.Battle;
-import com.battle.csbattle.battle.BattleStatus;
+import com.battle.csbattle.battle.BattleType;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.QuestionDto;
 import com.battle.csbattle.entity.Question;
 import com.battle.csbattle.entity.QuestionType;
 import com.battle.csbattle.repository.QuestionRepository;
-import com.battle.csbattle.util.SseUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -25,13 +23,6 @@ public class QuestionService {
     public QuestionDto getOneQuestionByQuestionType(QuestionType questionType) { // TODO : 코드 추가하기
         QuestionDto questionDto = new QuestionDto();
 
-        return questionDto;
-    }
-
-    public QuestionDto getQuestionByUserIndex(Battle battle, String userId){
-        Integer index = battle.getOngoingQuestions().get(userId);
-        List<QuestionDto> questions = battle.getQuestions();
-        QuestionDto questionDto = questions.get(index);
         return questionDto;
     }
 
@@ -54,11 +45,23 @@ public class QuestionService {
 
         battle.setQuestions(questions);
     }
-    public Boolean checkAnswer(Long questionId, AnswerDto answer) {
-        Question question = questionRepository.findById(questionId).get();
+    public Boolean checkAnswer(AnswerDto answer, Battle battle) {
 
+        QuestionDto question = battle.getQuestionByUser(answer.getUserId());
         Boolean isCorrect = false;
-        if(question.getAnswer().equals(answer.getAnswer())){ isCorrect = true; }
+
+        if(question.getAnswer().equals(answer.getAnswer())){
+            isCorrect = true;
+
+            log.info("index 증가 전 : " + battle.getOngoingQuestions().get(answer.getUserId()));
+            if(battle.getType() == BattleType.GOTOEND){
+                battle.increasingIndexByUserId(answer.getUserId());
+            }else{
+                battle.increasingIndex();
+            }
+
+            log.info("index 증가 후 : " + battle.getOngoingQuestions().get(answer.getUserId()));
+        }
 
         return isCorrect;
     }
