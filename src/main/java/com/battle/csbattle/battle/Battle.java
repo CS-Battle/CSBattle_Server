@@ -31,9 +31,6 @@ public class Battle {
         return battle;
     }
 
-    public void addQuestion(QuestionDto questionDto) {
-        this.questions.add(questionDto);
-    }
     public void deletePlayerById(String id){
         UserDto player = this.players.get(id);
         player.setEmitter(null);
@@ -41,5 +38,11 @@ public class Battle {
         this.players.remove(id);
     }
 
-    public void increasingIndexOfOngoingQuestion(String userId){ ongoingQuestions.put(userId, ongoingQuestions.get(userId) + 1);}
+    public QuestionDto getQuestionByUser(String userId){
+        return questions.get(ongoingQuestions.get(userId));
+    }
+    public void increasingIndexByUserId(String userId){ ongoingQuestions.replace(userId, ongoingQuestions.get(userId) + 1);}
+    public void increasingIndex(){
+        ongoingQuestions.replaceAll((k, v) -> v + 1);
+    }
 }
