@@ -44,10 +44,10 @@
             console.log("answerResultJson : ", answerResultJson);
 
             if (answerResultJson.isCorrect) {
-                alert(answerResultJson.userId + "님이 " + answerResultJson.questionId + "문제의 정답을 맞추셨습니다!");
+                alert(answerResultJson.userId + "님이 " + answerResultJson.questionIdx + "번째 문제의 정답을 맞추셨습니다!");
             }
             else {
-                alert(answerResultJson.userId + "님이 " + answerResultJson.questionId + "문제를 틀리셨습니다 ㅜㅜ");
+                alert(answerResultJson.userId + "님이 " + answerResultJson.questionIdx + "번째 문제를 틀리셨습니다 ㅜㅜ");
             }
         })
 
@@ -87,7 +87,6 @@
             body: JSON.stringify({
                 battleId: battleId,
                 userId: userId,
-                questionId: questionId,
                 answer: answer
             }),
         })

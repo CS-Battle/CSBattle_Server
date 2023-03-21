@@ -32,7 +32,6 @@ public class BattleController {
     public ResponseEntity<Response> getQuestion(
             @RequestParam("battleId") String battleId, @RequestParam("userId") String userId)
     {
-        log.info("question : " + battleId);
         Battle battle = battleService.findBattleById(battleId);
 
         QuestionDto questionDto =  battle.getQuestionByUser(userId); // 테스트 시 사용
@@ -46,9 +45,12 @@ public class BattleController {
             }catch (InterruptedException e){
                 System.out.println(e.getMessage());
             }
-            log.info(" 제한시간 만료" + " [ userID : " + userId + " ]");
-            battle.setBattleStatus(BattleStatus.Gaming);
-            SseUtil.sendToClient(battle.getPlayers().get(userId).getEmitter(),"timeLimit","제한시간이 만료되었습니다.");
+
+            if(battle.getBattleStatus() == BattleStatus.AbleAnswer){
+                log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
+                battle.setBattleStatus(BattleStatus.Gaming);
+                SseUtil.sendToClient(battle.getPlayers().get(userId).getEmitter(),"timeLimit","제한시간이 만료되었습니다.");
+            }
         });
         thread.start();
 
@@ -71,12 +73,15 @@ public class BattleController {
         Battle battle = battleService.findBattleById(answer.getBattleId());
 
         if (battle.getBattleStatus() == BattleStatus.AbleAnswer) {
+            int questionIdx = battle.getQuestionIdxByUserId(answer.getUserId()) + 1;
             Boolean isCorrect = questionService.checkAnswer(answer, battle);
 
             for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
                 SseEmitter emitter = battle.getPlayers().get(key).getEmitter();
-                SseUtil.sendToClient(emitter, "answer-result", AnswerResultDto.builder()
+                SseUtil.sendToClient(emitter, "answer-result",
+                        AnswerResultDto.builder()
                         .userId(answer.getUserId())
+                        .questionIdx(Integer.toString(questionIdx))
                         .isCorrect(isCorrect)
                         .build());
             }
