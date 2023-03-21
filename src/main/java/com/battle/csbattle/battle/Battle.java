@@ -45,4 +45,5 @@ public class Battle {
     public void increasingIndex(){
         ongoingQuestions.replaceAll((k, v) -> v + 1);
     }
+    public Integer getQuestionIdxByUserId(String userId){return ongoingQuestions.get(userId);}
 }
