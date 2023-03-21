@@ -4,18 +4,17 @@ import com.battle.csbattle.battle.Battle;
 import com.battle.csbattle.battle.BattleType;
 import com.battle.csbattle.dto.UserDto;
 import com.battle.csbattle.util.SseUtil;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 public class BattleService {
-    private Map<String, Battle> battles = new ConcurrentHashMap<>();
+    private final Map<String, Battle> battles = new ConcurrentHashMap<>();
     private final QuestionService questionService;
 
 
@@ -30,7 +29,7 @@ public class BattleService {
 
         if(type == BattleType.ONEQUESTION) {
             questionService.addQuestionsToBattle(battle, 1);
-        }else if(type == BattleType.GOTOEND && type == BattleType.WINFIRST){
+        }else if(type == BattleType.GOTOEND || type == BattleType.WINFIRST){
             questionService.addQuestionsToBattle(battle, 5);
         }
 
@@ -45,9 +44,6 @@ public class BattleService {
             }
             SseUtil.sendToClient(player.getEmitter(),"battle-start",battleId);                // 해당 배틀의 참여자들에게 배틀 시작 알림 전송
         }
-
-
-
 
 
         System.out.println("~~~ total battles : " + battles);
@@ -66,7 +62,7 @@ public class BattleService {
         for (String battleId : battles.keySet()) {
             Battle battle = battles.get(battleId);
             for (String playerId : battle.getPlayers().keySet()) {
-                if (playerId == userId) {
+                if (Objects.equals(playerId, userId)) {
                     return battle;
                 }
             }

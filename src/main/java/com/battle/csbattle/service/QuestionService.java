@@ -1,6 +1,7 @@
 package com.battle.csbattle.service;
 
 import com.battle.csbattle.battle.Battle;
+import com.battle.csbattle.battle.BattleStatus;
 import com.battle.csbattle.battle.BattleType;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.QuestionDto;
@@ -48,19 +49,17 @@ public class QuestionService {
     public Boolean checkAnswer(AnswerDto answer, Battle battle) {
 
         QuestionDto question = battle.getQuestionByUser(answer.getUserId());
-        Boolean isCorrect = false;
+        boolean isCorrect = false;
 
         if(question.getAnswer().equals(answer.getAnswer())){
             isCorrect = true;
 
-            log.info("index 증가 전 : " + battle.getOngoingQuestions().get(answer.getUserId()));
+            battle.setBattleStatus(BattleStatus.Gaming);
             if(battle.getType() == BattleType.GOTOEND){
                 battle.increasingIndexByUserId(answer.getUserId());
             }else{
                 battle.increasingIndex();
             }
-
-            log.info("index 증가 후 : " + battle.getOngoingQuestions().get(answer.getUserId()));
         }
 
         return isCorrect;
