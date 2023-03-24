@@ -34,8 +34,7 @@ public class BattleController {
     {
         Battle battle = battleService.findBattleById(battleId);
 
-        QuestionDto questionDto =  battle.getQuestionByUser(userId); // 테스트 시 사용
-        //QuestionDto questionDto = QuestionDto.clientForm(battle.getQuestionByUser(userId)); // 배포시 변경 되야함
+        QuestionDto questionDto = QuestionDto.clientForm(battle.getQuestionByUser(userId)); // 배포시 변경 되야함
         SseUtil.sendToClient(battle.getPlayers().get(userId).getEmitter(),"Question",questionDto);
 
         battle.setBattleStatus(BattleStatus.AbleAnswer);

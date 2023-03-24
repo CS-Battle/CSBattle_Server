@@ -15,12 +15,24 @@ public class QuestionDto {
     private Long questionId;
     private String content;
     private String answer;
+    private String csCategory;
+    private String questionType;
+    private String description;
+    private String attachmentPath;
+
 
     @Builder
-    public QuestionDto(Long questionId, String content, String answer) {
+    public QuestionDto(
+            Long questionId, String content, String answer,
+            String csCategory, String questionType, String description,
+            String attachmentPath) {
         this.questionId = questionId;
         this.content = content;
         this.answer = answer;
+        this.csCategory = csCategory;
+        this.questionType = questionType;
+        this.description = description;
+        this.attachmentPath = attachmentPath;
     }
 
     public static QuestionDto from(Question question){
@@ -28,12 +40,20 @@ public class QuestionDto {
                 .questionId(question.getId())
                 .content(question.getContent())
                 .answer(question.getAnswer())
+                .csCategory(question.getCsCategory().getName())
+                .questionType(question.getQuestionType().getName())
+                .description(question.getDescription())
+                .attachmentPath(question.getAttachmentPath())
                 .build();
     }
 
     public static QuestionDto clientForm(QuestionDto questionDto){
         return QuestionDto.builder()
                 .content(questionDto.getContent())
+                .csCategory(questionDto.getCsCategory())
+                .questionType(questionDto.getQuestionType())
+                .description(questionDto.getDescription())
+                .attachmentPath(questionDto.getAttachmentPath())
                 .build();
     }
 
