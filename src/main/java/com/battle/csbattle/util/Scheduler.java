@@ -18,7 +18,7 @@ public class Scheduler {
     @Scheduled(fixedDelay = 1000*60) //60초
     public void schedulerFixedDelayTask() {
         Map<String,UserDto> allPlayers= SseService.getAllPlayers();
-        System.out.println(System.currentTimeMillis()/1000);
+        System.out.println("connecting-check scheduler: " + System.currentTimeMillis()/1000);
         for(String key:allPlayers.keySet()){
             SseUtil.sendToClient(allPlayers.get(key).getEmitter(),"Connecting Check","Connecting Check");
         }

@@ -33,8 +33,8 @@ public class SseService {
         waitingPlayers.put(userId, player);
         allPlayers.put(userId,player);
 
-        System.out.println("--- current clients : " + waitingPlayers);
-        System.out.println("--- current clients size : " + waitingPlayers.size());
+        System.out.println("current waitingPlayers : " + waitingPlayers);
+        System.out.println("current waitingPlayers size : " + waitingPlayers.size());
 
         emitter.onCompletion(() -> {
             System.out.println("@@@ onCompletion callback");
@@ -42,19 +42,25 @@ public class SseService {
             allPlayers.remove(userId);
 
             Battle onGoingBattle = battleService.findBattleOfUser(userId);
-            if (onGoingBattle != null) {
 
+            System.out.println("@@@ completed userId : " + userId);
+            System.out.println("@@@ " + userId + " 's onGoingBattle : " + onGoingBattle.getId());
+
+            if (onGoingBattle != null) {
                 if (onGoingBattle.getPlayers().size()==2) {
                     SseUtil.sendToClient(player.getOpponent().getEmitter(), "opponent-left", userId + " 님이 게임을 나갔습니다.");
                 }
                 onGoingBattle.deletePlayerById(userId);
 
-                System.out.println(onGoingBattle.getPlayers());
+                System.out.println("@@@ players of onGoingBattle : " + onGoingBattle.getPlayers());
 
                 if (onGoingBattle.getPlayers().size() == 1) {
                     battleService.deleteBattleById(onGoingBattle.getId());
                 }
             }
+
+            System.out.println("@@@ after onCompletion total battles : " + battleService.getBattles());
+            System.out.println("@@@ after onCompletion total battles.size : " + battleService.getBattles().size());
         });
 
         emitter.onTimeout(() -> {
