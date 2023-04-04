@@ -2,6 +2,7 @@ package com.battle.csbattle.service;
 
 import com.battle.csbattle.battle.Battle;
 import com.battle.csbattle.battle.BattleType;
+import com.battle.csbattle.battle.UserStatus;
 import com.battle.csbattle.dto.UserDto;
 import com.battle.csbattle.util.SseUtil;
 import lombok.Getter;
@@ -68,6 +69,9 @@ public class SseService {
 
         if (waitingPlayers.size() == 2) {                                                       // 배틀 생성 (배틀 유형은 한문제 풀기)
             battleService.createBattle(BattleType.ONEQUESTION, waitingPlayers);
+            for (String playerId : waitingPlayers.keySet()) {
+                waitingPlayers.get(playerId).setUserStatus(UserStatus.Gaming);
+            }
             waitingPlayers.clear();
         }
 

@@ -1,5 +1,5 @@
 package com.battle.csbattle.battle;
 
-public enum BattleStatus {
+public enum UserStatus {
     Gaming,AbleAnswer
 }
