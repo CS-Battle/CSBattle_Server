@@ -54,7 +54,7 @@ public class SseService {
 
                 System.out.println("@@@ players of onGoingBattle : " + onGoingBattle.getPlayers());
 
-                if (onGoingBattle.getPlayers().size() == 1) {
+                if (onGoingBattle.getPlayers().size() <= 1) {
                     battleService.deleteBattleById(onGoingBattle.getId());
                 }
             }
