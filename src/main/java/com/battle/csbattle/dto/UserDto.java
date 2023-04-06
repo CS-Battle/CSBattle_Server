@@ -18,10 +18,15 @@ public class UserDto {
     private UserDto Opponent;
     private UserStatus userStatus;
     private Timer answerTimer = new Timer();
+    private int answerCount = 0;
 
     public UserDto(Battle battle, SseEmitter emitter, UserDto opponent) {
         this.battle = battle;
         this.emitter = emitter;
         Opponent = opponent;
+    }
+
+    public void increaseAnswerCount() {
+        this.answerCount++;
     }
 }

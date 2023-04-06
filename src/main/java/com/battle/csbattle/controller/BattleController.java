@@ -49,7 +49,7 @@ public class BattleController {
                 player.setUserStatus(UserStatus.Gaming);
                 SseUtil.sendToClient(player.getEmitter(),"timeOut","제한시간이 만료되었습니다.");
             }
-        },1000*10);
+        },1000*20);             //문제 제한시간
 
         Response body = Response.builder()
                 .status(StatusEnum.OK)
@@ -69,31 +69,48 @@ public class BattleController {
         Battle battle = battleService.findBattleById(answer.getBattleId());
         UserDto player = battle.getPlayers().get(answer.getUserId());
 
-        if (player.getUserStatus() == UserStatus.AbleAnswer) {
-            int questionIdx = battle.getQuestionIdxByUserId(answer.getUserId()) + 1;
-            Boolean isCorrect = questionService.checkAnswer(answer, battle);
-
-            for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
-                SseEmitter emitter = battle.getPlayers().get(key).getEmitter();
-                SseUtil.sendToClient(emitter, "answer-result",
-                        AnswerResultDto.builder()
-                        .userId(answer.getUserId())
-                        .questionIdx(Integer.toString(questionIdx))
-                        .isCorrect(isCorrect)
-                        .build());
-            }
-
-            body = Response.builder()
-                    .status(StatusEnum.OK)
-                    .data("answer submit success")
-                    .message("answer submit success")
-                    .build();
-        } else {
-            body = Response.builder()
-                    .status(StatusEnum.BAD_REQUEST)
-                    .message("timeout")
-                    .build();
+        if (player.getAnswerCount() == Battle.MAX_ANSWER_COUNT) {
+            player.setUserStatus(UserStatus.ExceedAnswerCount);
         }
+
+        UserStatus status = player.getUserStatus();
+        switch (status) {
+            case AbleAnswer -> {
+                player.increaseAnswerCount();
+
+                int questionIdx = battle.getQuestionIdxByUserId(answer.getUserId()) + 1;
+                Boolean isCorrect = questionService.checkAnswer(answer, battle);
+
+                for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
+                    SseEmitter emitter = battle.getPlayers().get(key).getEmitter();
+                    SseUtil.sendToClient(emitter, "answer-result",
+                            AnswerResultDto.builder()
+                                    .userId(answer.getUserId())
+                                    .questionIdx(Integer.toString(questionIdx))
+                                    .isCorrect(isCorrect)
+                                    .build());
+                }
+
+                body = Response.builder()
+                        .status(StatusEnum.OK)
+                        .data("answer submit success")
+                        .message("answer submit success")
+                        .build();
+            }
+            case ExceedAnswerCount -> {
+                body = Response.builder()
+                        .status(StatusEnum.BAD_REQUEST)
+                        .message("exceed max answer count")
+                        .build();
+            }
+            default -> {
+                body = Response.builder()
+                        .status(StatusEnum.BAD_REQUEST)
+                        .message("timeout")
+                        .build();
+            }
+        }
+
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
 }

@@ -12,6 +12,7 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 public class Battle {
+    public static int MAX_ANSWER_COUNT = 2;
     private String id;                                                  // 배틀 id
     private BattleType type;                                            // 배틀 유형
     private Map<String, UserDto> players = new HashMap<>();          // 참여 중인 플레이어
