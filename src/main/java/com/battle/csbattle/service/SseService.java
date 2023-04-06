@@ -40,6 +40,7 @@ public class SseService {
             System.out.println("@@@ onCompletion callback");
 
             allPlayers.remove(userId);
+            waitingPlayers.remove(userId);
 
             Battle onGoingBattle = battleService.findBattleOfUser(userId);
 
