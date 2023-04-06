@@ -57,11 +57,7 @@ public class QuestionService {
             isCorrect = true;
 
             player.setUserStatus(UserStatus.AbleAnswer);
-            if(battle.getType() == BattleType.GOTOEND){
-                battle.increasingIndexByUserId(answer.getUserId());
-            }else{
-                battle.increasingIndex();
-            }
+            battle.increasingIndexByUserId(answer.getUserId());
         }
 
         return isCorrect;
