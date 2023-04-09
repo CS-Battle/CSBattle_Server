@@ -4,6 +4,7 @@ import com.battle.csbattle.battle.Battle;
 import com.battle.csbattle.battle.BattleType;
 import com.battle.csbattle.dto.UserDto;
 import com.battle.csbattle.util.SseUtil;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @RequiredArgsConstructor
 public class BattleService {
+    @Getter
     private final Map<String, Battle> battles = new ConcurrentHashMap<>();
     private final QuestionService questionService;
 

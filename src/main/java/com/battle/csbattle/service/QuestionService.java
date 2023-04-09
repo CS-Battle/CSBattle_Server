@@ -1,10 +1,11 @@
 package com.battle.csbattle.service;
 
 import com.battle.csbattle.battle.Battle;
-import com.battle.csbattle.battle.BattleStatus;
 import com.battle.csbattle.battle.BattleType;
+import com.battle.csbattle.battle.UserStatus;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.QuestionDto;
+import com.battle.csbattle.dto.UserDto;
 import com.battle.csbattle.entity.Question;
 import com.battle.csbattle.entity.QuestionType;
 import com.battle.csbattle.repository.QuestionRepository;
@@ -47,6 +48,7 @@ public class QuestionService {
         battle.setQuestions(questions);
     }
     public Boolean checkAnswer(AnswerDto answer, Battle battle) {
+        UserDto player = battle.getPlayers().get(answer.getUserId());
 
         QuestionDto question = battle.getQuestionByUser(answer.getUserId());
         boolean isCorrect = false;
@@ -54,12 +56,8 @@ public class QuestionService {
         if(question.getAnswer().equals(answer.getAnswer())){
             isCorrect = true;
 
-            battle.setBattleStatus(BattleStatus.Gaming);
-            if(battle.getType() == BattleType.GOTOEND){
-                battle.increasingIndexByUserId(answer.getUserId());
-            }else{
-                battle.increasingIndex();
-            }
+            player.setUserStatus(UserStatus.AbleAnswer);
+            battle.increasingIndexByUserId(answer.getUserId());
         }
 
         return isCorrect;

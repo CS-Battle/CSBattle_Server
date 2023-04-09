@@ -68,7 +68,7 @@
            questionId=question.questionId;
         })
 
-        eventSource.addEventListener('timeLimit',e=>{
+        eventSource.addEventListener('timeOut',e=>{
             const {data:timelimit}=e;
             alert(timelimit)
         })

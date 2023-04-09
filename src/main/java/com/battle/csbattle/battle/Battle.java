@@ -12,9 +12,9 @@ import java.util.*;
 @Setter
 @NoArgsConstructor
 public class Battle {
+    public static int MAX_ANSWER_COUNT = 2;
     private String id;                                                  // 배틀 id
     private BattleType type;                                            // 배틀 유형
-    private BattleStatus battleStatus;
     private Map<String, UserDto> players = new HashMap<>();          // 참여 중인 플레이어
     private List<QuestionDto> questions = new ArrayList<>();       // 이 배틀에서의 문제 목록 (배틀 참여자들은 모두 동일한 문제를 풀어야 하기에 필요)
     private Map<String, Integer> ongoingQuestions = new HashMap<>();    // 현제 풀고 있는 문제의 인덱스
@@ -23,7 +23,6 @@ public class Battle {
         Battle battle = new Battle();
         battle.id = UUID.randomUUID().toString();
         battle.type = type;
-        battle.battleStatus=BattleStatus.Gaming;
         for (String key : players.keySet()) {
             battle.players.put(key,players.get(key));
             battle.ongoingQuestions.put(key,0);
