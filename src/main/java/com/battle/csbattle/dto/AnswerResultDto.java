@@ -10,13 +10,13 @@ import lombok.Setter;
 @NoArgsConstructor
 public class AnswerResultDto {
     private String userId;
-    private String questionId;
+    private String questionIdx;
     private Boolean isCorrect;
 
     @Builder
-    public AnswerResultDto(String userId, String questionId, Boolean isCorrect) {
+    public AnswerResultDto(String userId, String questionIdx, Boolean isCorrect) {
         this.userId = userId;
-        this.questionId = questionId;
+        this.questionIdx = questionIdx;
         this.isCorrect = isCorrect;
     }
 }

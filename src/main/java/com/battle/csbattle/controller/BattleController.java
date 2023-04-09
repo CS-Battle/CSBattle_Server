@@ -1,9 +1,11 @@
 package com.battle.csbattle.controller;
 
 import com.battle.csbattle.battle.Battle;
+import com.battle.csbattle.battle.UserStatus;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.AnswerResultDto;
 import com.battle.csbattle.dto.QuestionDto;
+import com.battle.csbattle.dto.UserDto;
 import com.battle.csbattle.response.Response;
 import com.battle.csbattle.response.StatusEnum;
 import com.battle.csbattle.service.BattleService;
@@ -15,7 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.Map;
+import java.util.TimerTask;
+
 
 @RestController
 @Slf4j
@@ -28,65 +31,86 @@ public class BattleController {
         this.questionService = questionService;
     }
 
-    @GetMapping("/battle/one-question")
-    public ResponseEntity<Response> oneQuestion(@RequestParam("battleId") String battleId) {
+    @GetMapping("/battle/question")
+    public ResponseEntity<Response> getQuestion(
+            @RequestParam("battleId") String battleId, @RequestParam("userId") String userId)
+    {
         Battle battle = battleService.findBattleById(battleId);
+        UserDto player = battle.getPlayers().get(userId);
 
-        QuestionDto question = questionService.getOneQuestion(battle);
+        QuestionDto questionDto = QuestionDto.clientForm(battle.getQuestionByUser(userId)); // 배포시 변경 되야함
+        SseUtil.sendToClient(player.getEmitter(),"Question",questionDto);
+
+        player.setUserStatus(UserStatus.AbleAnswer);
+        player.getAnswerTimer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
+                player.setUserStatus(UserStatus.Gaming);
+                SseUtil.sendToClient(player.getEmitter(),"timeOut","제한시간이 만료되었습니다.");
+            }
+        },1000*20);             //문제 제한시간
 
         Response body = Response.builder()
                 .status(StatusEnum.OK)
-                .data(question)
-                .message("get question success")
-                .build();
-        return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
-    }
-
-    @GetMapping("/battle/questions")
-    public ResponseEntity<Response> Question(
-            @RequestParam("battleId") String battleId, @RequestParam("count") int count) {
-        Battle battle = battleService.findBattleById(battleId);
-
-        questionService.getQuestions(battle, count);
-        Map<Long, QuestionDto> questions = battle.getQuestions();
-
-        // count 만큼 현제 문제 수 변화 테스트 부분
-        Map<String, Integer> ongoingQuestions = battle.getOngoingQuestions();
-        for (String key : battle.getPlayers().keySet()) {
-            ongoingQuestions.replace(key, ongoingQuestions.get(key) + count);
-        }
-
-        Response body = Response.builder()
-                .status(StatusEnum.OK)
-                .data(questions)
-                .message("get question success")
+                .message("Get Question Success")
+                .data(questionDto)
                 .build();
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
 
     @PostMapping("/battle/answer")
-    public ResponseEntity<Response> answer(@RequestBody AnswerDto answer) {
-        System.out.println("=== answer submited");
-        System.out.println("=== battle id : " + answer.getBattleId() + ", user : " + answer.getUserId() + ", questionId: " + answer.getQuestionId() + ", answer : " + answer.getAnswer());
+    public ResponseEntity<Response> answer(
+            @RequestBody AnswerDto answer) {
+        System.out.println("=== answer submitted");
+        System.out.println("=== battle id : " + answer.getBattleId() + ", user : " + answer.getUserId() + ", answer : " + answer.getAnswer());
+        Response body;
 
         Battle battle = battleService.findBattleById(answer.getBattleId());
+        UserDto player = battle.getPlayers().get(answer.getUserId());
 
-        Boolean isCorrect = questionService.checkAnswer(answer.getQuestionId(), answer);
-
-        for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
-            SseEmitter emitter = battle.getPlayers().get(key).getEmitter();
-            SseUtil.sendToClient(emitter,"answer-result", AnswerResultDto.builder()
-                    .userId(answer.getUserId())
-                    .questionId(answer.getQuestionId().toString())
-                    .isCorrect(isCorrect)
-                    .build());
+        if (player.getAnswerCount() == Battle.MAX_ANSWER_COUNT) {
+            player.setUserStatus(UserStatus.ExceedAnswerCount);
         }
 
-        Response body = Response.builder()
-                .status(StatusEnum.OK)
-                .data("answer submit success")
-                .message("answer submit success")
-                .build();
+        UserStatus status = player.getUserStatus();
+        switch (status) {
+            case AbleAnswer -> {
+                player.increaseAnswerCount();
+
+                int questionIdx = battle.getQuestionIdxByUserId(answer.getUserId()) + 1;
+                Boolean isCorrect = questionService.checkAnswer(answer, battle);
+
+                for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
+                    SseEmitter emitter = battle.getPlayers().get(key).getEmitter();
+                    SseUtil.sendToClient(emitter, "answer-result",
+                            AnswerResultDto.builder()
+                                    .userId(answer.getUserId())
+                                    .questionIdx(Integer.toString(questionIdx))
+                                    .isCorrect(isCorrect)
+                                    .build());
+                }
+
+                body = Response.builder()
+                        .status(StatusEnum.OK)
+                        .data("answer submit success")
+                        .message("answer submit success")
+                        .build();
+            }
+            case ExceedAnswerCount -> {
+                body = Response.builder()
+                        .status(StatusEnum.BAD_REQUEST)
+                        .message("exceed max answer count")
+                        .build();
+            }
+            default -> {
+                body = Response.builder()
+                        .status(StatusEnum.BAD_REQUEST)
+                        .message("timeout")
+                        .build();
+            }
+        }
+
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
 }

@@ -4,8 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 @Data
 public class Response {
@@ -28,7 +27,7 @@ public class Response {
 
     public static HttpHeaders getDefaultHeader() {
         HttpHeaders headers= new HttpHeaders();
-        headers.setContentType(new MediaType("application", "json", Charset.forName("UTF-8")));
+        headers.setContentType(new MediaType("application", "json", StandardCharsets.UTF_8));
         return headers;
     }
 }

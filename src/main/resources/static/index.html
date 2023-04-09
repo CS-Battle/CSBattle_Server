@@ -29,10 +29,12 @@
         eventSource.addEventListener(`battle-start`, e => {             // 배틀 시작 이벤트
             const { data: battle_Id } = e;
             console.log("battle started!! battle id : ", battle_Id);
-            alert("battle started!!");
             battleId = battle_Id;
-
             getQuestion();
+            alert("battle started!!");
+
+
+
         })
 
         eventSource.addEventListener(`answer-result`, e => {            // 정답 여부 알림 이벤트
@@ -42,10 +44,10 @@
             console.log("answerResultJson : ", answerResultJson);
 
             if (answerResultJson.isCorrect) {
-                alert(answerResultJson.userId + "님이 " + answerResultJson.questionId + "문제의 정답을 맞추셨습니다!");
+                alert(answerResultJson.userId + "님이 " + answerResultJson.questionIdx + "번째 문제의 정답을 맞추셨습니다!");
             }
             else {
-                alert(answerResultJson.userId + "님이 " + answerResultJson.questionId + "문제를 틀리셨습니다 ㅜㅜ");
+                alert(answerResultJson.userId + "님이 " + answerResultJson.questionIdx + "번째 문제를 틀리셨습니다 ㅜㅜ");
             }
         })
 
@@ -57,6 +59,18 @@
 
         eventSource.addEventListener(`checking-connection`, e => {
             const { data: message } = e;
+        })
+
+        eventSource.addEventListener('Question',e=>{
+           const {data:questionJson}=e;
+           const question=JSON.parse(questionJson);
+           console.log("ID : ",question.questionId,"문제 : ",question.content);
+           questionId=question.questionId;
+        })
+
+        eventSource.addEventListener('timeOut',e=>{
+            const {data:timelimit}=e;
+            alert(timelimit)
         })
     }
 
@@ -73,7 +87,6 @@
             body: JSON.stringify({
                 battleId: battleId,
                 userId: userId,
-                questionId: questionId,
                 answer: answer
             }),
         })
@@ -84,14 +97,13 @@
     function getQuestion() {
         const userId = document.getElementById("userId").value;
 
-        fetch(`http://localhost:8080/battle/one-question?` + new URLSearchParams({
-            battleId: battleId
+        fetch(`http://localhost:8080/battle/question?` + new URLSearchParams({
+            battleId: battleId,
+            userId:userId
         }))
             .then((response) => response.json())
             .then((result) => {
-                console.log("result of getQuestion : ", result);
-                questionId = result.data?.questionId;
-                console.log("questionId : " + questionId);
+
             })
     }
 </script>
