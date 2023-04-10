@@ -14,7 +14,7 @@ public class AnswerDto {
     private String answer;
 
     @Builder
-    public AnswerDto(String battleId, String userId, Integer questionIdx, String answer) {
+    public AnswerDto(String battleId, String userId, String answer) {
         this.battleId = battleId;
         this.userId = userId;
         this.answer = answer;
