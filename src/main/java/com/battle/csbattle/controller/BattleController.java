@@ -39,9 +39,15 @@ public class BattleController {
         UserDto player = battle.getPlayers().get(userId);
 
         QuestionDto questionDto = battle.getQuestionByUser(userId);
-        questionDto.setAnswer(null);
-        questionDto.setQuestionId(null);
-        SseUtil.sendToClient(player.getEmitter(),"Question",questionDto);
+        QuestionDto responseDto = QuestionDto.builder()
+                .content(questionDto.getContent())
+                .csCategory(questionDto.getCsCategory())
+                .questionType(questionDto.getQuestionType())
+                .description(questionDto.getDescription())
+                .attachmentPath(questionDto.getAttachmentPath())
+                .build();
+
+        SseUtil.sendToClient(player.getEmitter(),"Question",responseDto);
 
         player.setUserStatus(UserStatus.AbleAnswer);
         player.getAnswerTimer().schedule(new TimerTask() {
@@ -56,7 +62,7 @@ public class BattleController {
         Response body = Response.builder()
                 .status(StatusEnum.OK)
                 .message("Get Question Success")
-                .data(questionDto)
+                .data(responseDto)
                 .build();
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
@@ -92,6 +98,7 @@ public class BattleController {
                                     .isCorrect(isCorrect)
                                     .build());
                 }
+
 
                 body = Response.builder()
                         .status(StatusEnum.OK)
