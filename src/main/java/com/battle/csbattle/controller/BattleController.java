@@ -38,7 +38,9 @@ public class BattleController {
         Battle battle = battleService.findBattleById(battleId);
         UserDto player = battle.getPlayers().get(userId);
 
-        QuestionDto questionDto = QuestionDto.clientForm(battle.getQuestionByUser(userId)); // 배포시 변경 되야함
+        QuestionDto questionDto = battle.getQuestionByUser(userId);
+        questionDto.setAnswer(null);
+        questionDto.setQuestionId(null);
         SseUtil.sendToClient(player.getEmitter(),"Question",questionDto);
 
         player.setUserStatus(UserStatus.AbleAnswer);

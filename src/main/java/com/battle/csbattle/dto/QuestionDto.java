@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 @Getter
@@ -17,14 +18,14 @@ public class QuestionDto {
     private String answer;
     private String csCategory;
     private String questionType;
-    private String description;
+    private ArrayList<String> description;
     private String attachmentPath;
 
 
     @Builder
     public QuestionDto(
             Long questionId, String content, String answer,
-            String csCategory, String questionType, String description,
+            String csCategory, String questionType, ArrayList<String> description,
             String attachmentPath) {
         this.questionId = questionId;
         this.content = content;
@@ -37,24 +38,19 @@ public class QuestionDto {
 
 
     public static QuestionDto from(Question question){
+        ArrayList<String> descriptionList = new ArrayList<>();
+        String[] split = question.getDescription().split(",");
+        for (String description : split) {
+            descriptionList.add(description);
+        }
         return QuestionDto.builder()
                 .questionId(question.getId())
                 .content(question.getContent())
                 .answer(question.getAnswer())
                 .csCategory(question.getCsCategory().getName())
                 .questionType(question.getQuestionType().getName())
-                .description(question.getDescription())
+                .description(descriptionList)
                 .attachmentPath(question.getAttachmentPath())
-                .build();
-    }
-
-    public static QuestionDto clientForm(QuestionDto questionDto){
-        return QuestionDto.builder()
-                .content(questionDto.getContent())
-                .csCategory(questionDto.getCsCategory())
-                .questionType(questionDto.getQuestionType())
-                .description(questionDto.getDescription())
-                .attachmentPath(questionDto.getAttachmentPath())
                 .build();
     }
 
