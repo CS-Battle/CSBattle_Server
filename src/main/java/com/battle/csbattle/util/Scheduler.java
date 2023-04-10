@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,7 +39,7 @@ public class Scheduler {
         int count=0;
         System.out.println("playerQueue Scheduler : " + System.currentTimeMillis()/1000);
         while (SseService.waitingPlayers.size()>=2) {
-            List<String> userQueue=new ArrayList<>();
+            List<String> userQueue = Collections.synchronizedList(new ArrayList<>());
             Map<String,UserDto> playerGroup=new ConcurrentHashMap<>();
             for (String playerId:SseService.waitingPlayers.keySet()){
                 SseEmitter checkingEmitter = SseService.waitingPlayers.get(playerId).getEmitter();
