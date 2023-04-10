@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class SseService {
     private static final Long DEFAULT_TIMEOUT = 60L * 1000*10;                            // Sse 연결의 유효시간. 만료되면 자동으로 클라에서 재연결 요청. TODO: 게임에 걸리는 시간보다 길게 설정해두기
-    private static final Map<String, UserDto> waitingPlayers = new ConcurrentHashMap<>();       // 배틀 시작 전 대기 큐의 역할
+    public static final Map<String, UserDto> waitingPlayers = new ConcurrentHashMap<>();       // 배틀 시작 전 대기 큐의 역할
 
     @Getter
     public static final Map<String,UserDto> allPlayers=new ConcurrentHashMap<>();
@@ -69,25 +69,10 @@ public class SseService {
 
 
 
-        if (waitingPlayers.size() == 2) {
-            boolean res=true;
-            for (String clientId : waitingPlayers.keySet()) {
-                SseEmitter checkingEmitter = waitingPlayers.get(clientId).getEmitter();
-                if(!SseUtil.sendToClient(checkingEmitter, "checking-connection", "checking connection")) {
-                    res = false;
-                }
-            }// 배틀 생성 (배틀 유형은 한문제 풀기)
-            if(res) {
-                battleService.createBattle(BattleType.ONEQUESTION, waitingPlayers);
-                for (String playerId : waitingPlayers.keySet()) {
-                    waitingPlayers.get(playerId).setUserStatus(UserStatus.Gaming);
-                }
-                waitingPlayers.clear();
-            }
-        }
-
         SseUtil.sendToClient(emitter, "sse", "--------- EventStream Created. [userId=" + userId + "]");             // 503 에러를 방지하기 위한 더미 이벤트 전송
 
         return emitter;
     }
+
+
 }
