@@ -1,6 +1,7 @@
 package com.battle.csbattle.controller;
 
 import com.battle.csbattle.battle.Battle;
+import com.battle.csbattle.battle.BattleType;
 import com.battle.csbattle.battle.UserStatus;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.AnswerResultDto;
@@ -53,9 +54,14 @@ public class BattleController {
         player.getAnswerTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
-                player.setUserStatus(UserStatus.Gaming);
-                SseUtil.sendToClient(player.getEmitter(),"timeOut","제한시간이 만료되었습니다.");
+                if(player.getUserStatus() == UserStatus.AbleAnswer) {
+                    log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
+                    player.setUserStatus(UserStatus.Gaming);
+                    SseUtil.sendToClient(player.getEmitter(), "timeOut", "제한시간이 만료되었습니다.");
+
+                    if (battle.getType() == BattleType.ONEQUESTION)
+                        player.getEmitter().complete();
+                }
             }
         },1000*20);             //문제 제한시간
 
@@ -97,7 +103,10 @@ public class BattleController {
                                     .questionIdx(Integer.toString(questionIdx))
                                     .isCorrect(isCorrect)
                                     .build());
+
+                    if(isCorrect && battle.getType() == BattleType.ONEQUESTION) emitter.complete();
                 }
+
 
 
                 body = Response.builder()
