@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 @Setter
@@ -15,9 +16,9 @@ public class Battle {
     public static int MAX_ANSWER_COUNT = 2;
     private String id;                                                  // 배틀 id
     private BattleType type;                                            // 배틀 유형
-    private Map<String, UserDto> players = new HashMap<>();          // 참여 중인 플레이어
+    private Map<String, UserDto> players = new ConcurrentHashMap<>();          // 참여 중인 플레이어
     private List<QuestionDto> questions = new ArrayList<>();       // 이 배틀에서의 문제 목록 (배틀 참여자들은 모두 동일한 문제를 풀어야 하기에 필요)
-    private Map<String, Integer> ongoingQuestions = new HashMap<>();    // 현제 풀고 있는 문제의 인덱스
+    private Map<String, Integer> ongoingQuestions = new ConcurrentHashMap<>();   // 현제 풀고 있는 문제의 인덱스
 
     public static Battle create(BattleType type, Map<String, UserDto> players) {
         Battle battle = new Battle();
