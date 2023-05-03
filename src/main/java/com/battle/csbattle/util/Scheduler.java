@@ -48,17 +48,17 @@ public class Scheduler {
                 }
                 if(userQueue.size()==2) break;
             }
-            for(String playerId:userQueue) {
-                playerGroup.put(playerId,SseService.waitingPlayers.get(playerId));
-                SseService.waitingPlayers.remove(playerId);
-            }
-            battleService.createBattle(BattleType.ONEQUESTION, playerGroup);
-            for (String playerId : playerGroup.keySet()) {
-                playerGroup.get(playerId).setUserStatus(UserStatus.Gaming);
+            if(userQueue.size()==2) {
+                for (String playerId : userQueue) {
+                    playerGroup.put(playerId, SseService.waitingPlayers.get(playerId));
+                    SseService.waitingPlayers.remove(playerId);
+                }
+                battleService.createBattle(BattleType.ONEQUESTION, playerGroup);
+                for (String playerId : playerGroup.keySet()) {
+                    playerGroup.get(playerId).setUserStatus(UserStatus.Gaming);
+                }
             }
         }
         System.out.println("@@@Waiting Players : "+ SseService.waitingPlayers.toString());
-
-
     }
 }
