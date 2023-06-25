@@ -2,6 +2,7 @@ package com.battle.csbattle.service;
 
 import com.battle.csbattle.battle.Battle;
 import com.battle.csbattle.battle.BattleType;
+import com.battle.csbattle.dto.BattleStartDto;
 import com.battle.csbattle.dto.UserDto;
 import com.battle.csbattle.util.SseUtil;
 import lombok.Getter;
@@ -29,22 +30,26 @@ public class BattleService {
 
         System.out.println("~~~ battle " + battleId + " created with players ");
 
-        if(type == BattleType.ONEQUESTION) {
+        if (type == BattleType.ONEQUESTION) {
             questionService.addQuestionsToBattle(battle, 1);
-        }else if(type == BattleType.GOTOEND || type == BattleType.WINFIRST){
+        } else if (type == BattleType.GOTOEND || type == BattleType.WINFIRST) {
             questionService.addQuestionsToBattle(battle, 5);
         }
 
         for (String key : battle.getPlayers().keySet()) {
             UserDto player = battle.getPlayers().get(key);
             System.out.println(player.getEmitter());
-            for(String key2:battle.getPlayers().keySet()){
-                UserDto player2=battle.getPlayers().get(key2);
-                if (!key.equals(key2)){
+            for (String key2 : battle.getPlayers().keySet()) {
+                UserDto player2 = battle.getPlayers().get(key2);
+                if (!key.equals(key2)) {
                     player.setOpponent(player2);
                 }
             }
-            SseUtil.sendToClient(player.getEmitter(),"battle-start",battleId);                // 해당 배틀의 참여자들에게 배틀 시작 알림 전송
+            BattleStartDto battleStartDto = BattleStartDto.builder()
+                    .battleId(battleId)
+                    .userId(key)
+                    .build();
+            SseUtil.sendToClient(player.getEmitter(), "battle-start", battleStartDto);                // 해당 배틀의 참여자들에게 배틀 시작 알림 전송
         }
 
 
