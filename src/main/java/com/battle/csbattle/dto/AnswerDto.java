@@ -9,13 +9,11 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class AnswerDto {
-    private String battleId;
     private String userId;
     private String answer;
 
     @Builder
-    public AnswerDto(String battleId, String userId, String answer) {
-        this.battleId = battleId;
+    public AnswerDto(String userId, String answer) {
         this.userId = userId;
         this.answer = answer;
     }

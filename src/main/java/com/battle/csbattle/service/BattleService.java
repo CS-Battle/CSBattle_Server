@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.security.KeyPair;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,22 +30,23 @@ public class BattleService {
 
         System.out.println("~~~ battle " + battleId + " created with players ");
 
-        if(type == BattleType.ONEQUESTION) {
+        if (type == BattleType.ONEQUESTION) {
             questionService.addQuestionsToBattle(battle, 1);
-        }else if(type == BattleType.GOTOEND || type == BattleType.WINFIRST){
+        } else if (type == BattleType.GOTOEND || type == BattleType.WINFIRST) {
             questionService.addQuestionsToBattle(battle, 5);
         }
 
-        for (String key : battle.getPlayers().keySet()) {
-            UserDto player = battle.getPlayers().get(key);
+        for (String key : players.keySet()) {
+            UserDto player = players.get(key);
             System.out.println(player.getEmitter());
-            for(String key2:battle.getPlayers().keySet()){
-                UserDto player2=battle.getPlayers().get(key2);
-                if (!key.equals(key2)){
+            for (String key2 : players.keySet()) {
+                UserDto player2 = players.get(key2);
+                if (!key.equals(key2)) {
                     player.setOpponent(player2);
                 }
             }
-            SseUtil.sendToClient(player.getEmitter(),"battle-start",battleId);                // 해당 배틀의 참여자들에게 배틀 시작 알림 전송
+            player.setBattle(battle);
+            SseUtil.sendToClient(player.getEmitter(), "battle-start", key);                // 해당 배틀의 참여자들에게 배틀 시작 알림 전송
         }
 
 
