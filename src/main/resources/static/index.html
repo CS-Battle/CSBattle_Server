@@ -14,7 +14,6 @@
 </html>
 
 <script type="text/javascript">
-    var battleId = ""
     var questionId = ""
 
     function connect() {
@@ -27,14 +26,10 @@
         })
 
         eventSource.addEventListener(`battle-start`, e => {             // 배틀 시작 이벤트
-            const { data: battle_Id } = e;
-            console.log("battle started!! battle id : ", battle_Id);
-            battleId = battle_Id;
+            const { data: userId } = e;
+            console.log("battle started!! user id : ", userId);
             getQuestion();
             alert("battle started!!");
-
-
-
         })
 
         eventSource.addEventListener(`answer-result`, e => {            // 정답 여부 알림 이벤트
@@ -87,7 +82,6 @@
             },
             method: 'POST',
             body: JSON.stringify({
-                battleId: battleId,
                 userId: userId,
                 answer: answer
             }),
@@ -100,7 +94,6 @@
         const userId = document.getElementById("userId").value;
 
         fetch(`http://localhost:8080/battle/question?` + new URLSearchParams({
-            battleId: battleId,
             userId:userId
         }))
             .then((response) => response.json())

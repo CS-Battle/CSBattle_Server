@@ -11,6 +11,7 @@ import com.battle.csbattle.response.Response;
 import com.battle.csbattle.response.StatusEnum;
 import com.battle.csbattle.service.BattleService;
 import com.battle.csbattle.service.QuestionService;
+import com.battle.csbattle.service.SseService;
 import com.battle.csbattle.util.SseUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,20 +25,17 @@ import java.util.TimerTask;
 @RestController
 @Slf4j
 public class BattleController {
-    private final BattleService battleService;
     private final QuestionService questionService;
 
-    public BattleController(BattleService battleService, QuestionService questionService) {
-        this.battleService = battleService;
+    public BattleController(QuestionService questionService) {
         this.questionService = questionService;
     }
 
     @GetMapping("/battle/question")
     public ResponseEntity<Response> getQuestion(
-            @RequestParam("battleId") String battleId, @RequestParam("userId") String userId)
-    {
-        Battle battle = battleService.findBattleById(battleId);
-        UserDto player = battle.getPlayers().get(userId);
+            @RequestParam("userId") String userId) {
+        UserDto player = SseService.allPlayers.get(userId);
+        Battle battle = player.getBattle();
 
         QuestionDto questionDto = battle.getQuestionByUser(userId);
         QuestionDto responseDto = QuestionDto.builder()
@@ -48,20 +46,21 @@ public class BattleController {
                 .attachmentPath(questionDto.getAttachmentPath())
                 .build();
 
-        SseUtil.sendToClient(player.getEmitter(),"Question",responseDto);
+        SseUtil.sendToClient(player.getEmitter(), "Question", responseDto);
 
         player.setUserStatus(UserStatus.AbleAnswer);
         player.getAnswerTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
+                log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battle.getId() + " ]");
                 player.setUserStatus(UserStatus.Gaming);
                 SseUtil.sendToClient(player.getEmitter(), "timeOut", "제한시간이 만료되었습니다.");
 
                 if (battle.getType() == BattleType.ONEQUESTION)
                     player.getEmitter().complete();
+
             }
-        },1000*20);             //문제 제한시간
+        }, 1000 * 20);             //문제 제한시간
 
         Response body = Response.builder()
                 .status(StatusEnum.OK)
@@ -74,12 +73,13 @@ public class BattleController {
     @PostMapping("/battle/answer")
     public ResponseEntity<Response> answer(
             @RequestBody AnswerDto answer) {
-        System.out.println("=== answer submitted");
-        System.out.println("=== battle id : " + answer.getBattleId() + ", user : " + answer.getUserId() + ", answer : " + answer.getAnswer());
         Response body;
+        UserDto player = SseService.allPlayers.get(answer.getUserId());
 
-        Battle battle = battleService.findBattleById(answer.getBattleId());
-        UserDto player = battle.getPlayers().get(answer.getUserId());
+        Battle battle = player.getBattle();
+
+        System.out.println("=== answer submitted");
+        System.out.println("=== battle id : " + battle.getId() + ", user : " + answer.getUserId() + ", answer : " + answer.getAnswer());
 
         if (player.getAnswerCount() == Battle.MAX_ANSWER_COUNT) {
             player.setUserStatus(UserStatus.ExceedAnswerCount);
@@ -120,6 +120,7 @@ public class BattleController {
                                     .isCorrect(false)
                                     .build());
                 }
+
 
                 body = Response.builder()
                         .status(StatusEnum.OK)
