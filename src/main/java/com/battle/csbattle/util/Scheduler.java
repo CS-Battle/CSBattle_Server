@@ -24,16 +24,6 @@ public class Scheduler {
     @Autowired
     private  BattleService battleService;
     @Async
-    @Scheduled(fixedDelay = 1000*60) //60초
-    public void deleteZombieBattleScheduler() {
-        Map<String,UserDto> allPlayers= SseService.getAllPlayers();
-        System.out.println("connecting-check scheduler: " + System.currentTimeMillis()/1000);
-        for(String key:allPlayers.keySet()){
-            SseUtil.sendToClient(allPlayers.get(key).getEmitter(),"Connecting Check","Connecting Check");
-        }
-    }
-
-    @Async
     @Scheduled(fixedDelay = 1000*10) //10초
     public void playerQueueScheduler() {
         int count=0;
