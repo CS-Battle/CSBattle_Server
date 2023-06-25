@@ -39,6 +39,7 @@
             console.log("answerResultJson : ", answerResultJson);
 
             if (answerResultJson.isCorrect) {
+                eventSource.close();
                 alert(answerResultJson.userId + "님이 " + answerResultJson.questionIdx + "번째 문제의 정답을 맞추셨습니다!");
             }
             else {
@@ -66,6 +67,7 @@
         eventSource.addEventListener('timeOut',e=>{
             const {data:timelimit}=e;
             alert(timelimit)
+            eventSource.close();
         })
     }
 
