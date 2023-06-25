@@ -1,6 +1,7 @@
 package com.battle.csbattle.controller;
 
 import com.battle.csbattle.battle.Battle;
+import com.battle.csbattle.battle.BattleType;
 import com.battle.csbattle.battle.UserStatus;
 import com.battle.csbattle.dto.AnswerDto;
 import com.battle.csbattle.dto.AnswerResultDto;
@@ -38,23 +39,36 @@ public class BattleController {
         Battle battle = battleService.findBattleById(battleId);
         UserDto player = battle.getPlayers().get(userId);
 
-        QuestionDto questionDto = QuestionDto.clientForm(battle.getQuestionByUser(userId)); // 배포시 변경 되야함
-        SseUtil.sendToClient(player.getEmitter(),"Question",questionDto);
+        QuestionDto questionDto = battle.getQuestionByUser(userId);
+        QuestionDto responseDto = QuestionDto.builder()
+                .content(questionDto.getContent())
+                .csCategory(questionDto.getCsCategory())
+                .questionType(questionDto.getQuestionType())
+                .description(questionDto.getDescription())
+                .attachmentPath(questionDto.getAttachmentPath())
+                .build();
+
+        SseUtil.sendToClient(player.getEmitter(),"Question",responseDto);
 
         player.setUserStatus(UserStatus.AbleAnswer);
         player.getAnswerTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
-                player.setUserStatus(UserStatus.Gaming);
-                SseUtil.sendToClient(player.getEmitter(),"timeOut","제한시간이 만료되었습니다.");
+                if(player.getUserStatus() == UserStatus.AbleAnswer) {
+                    log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
+                    player.setUserStatus(UserStatus.Gaming);
+                    SseUtil.sendToClient(player.getEmitter(), "timeOut", "제한시간이 만료되었습니다.");
+
+                    if (battle.getType() == BattleType.ONEQUESTION)
+                        player.getEmitter().complete();
+                }
             }
         },1000*20);             //문제 제한시간
 
         Response body = Response.builder()
                 .status(StatusEnum.OK)
                 .message("Get Question Success")
-                .data(questionDto)
+                .data(responseDto)
                 .build();
         return new ResponseEntity<>(body, Response.getDefaultHeader(), HttpStatus.OK);
     }
@@ -89,7 +103,11 @@ public class BattleController {
                                     .questionIdx(Integer.toString(questionIdx))
                                     .isCorrect(isCorrect)
                                     .build());
+
+                    if(isCorrect && battle.getType() == BattleType.ONEQUESTION) emitter.complete();
                 }
+
+
 
                 body = Response.builder()
                         .status(StatusEnum.OK)
