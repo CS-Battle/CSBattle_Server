@@ -54,12 +54,13 @@ public class BattleController {
         player.getAnswerTimer().schedule(new TimerTask() {
             @Override
             public void run() {
+                log.info(userId + "의 timer 작동");
                 if(player.getUserStatus() == UserStatus.AbleAnswer) {
                     log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
                     player.setUserStatus(UserStatus.Gaming);
                     SseUtil.sendToClient(player.getEmitter(), "timeOut", "제한시간이 만료되었습니다.");
 
-                    if (battle.getType() == BattleType.ONEQUESTION)
+                    if (battle.getType() == BattleType.ONEQUESTION && player != null)
                         player.getEmitter().complete();
                 }
             }
@@ -104,7 +105,12 @@ public class BattleController {
                                     .isCorrect(isCorrect)
                                     .build());
 
-                    if(isCorrect && battle.getType() == BattleType.ONEQUESTION) emitter.complete();
+                    if(isCorrect && battle.getType() == BattleType.ONEQUESTION) {
+                        player.setUserStatus(UserStatus.Gaming);
+                        player.getAnswerTimer().cancel();
+                        player.getOpponent().getAnswerTimer().cancel();
+                        emitter.complete();
+                    }
                 }
 
 
