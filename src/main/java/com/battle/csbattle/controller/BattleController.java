@@ -54,15 +54,12 @@ public class BattleController {
         player.getAnswerTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                log.info(userId + "의 timer 작동");
-                if(player.getUserStatus() == UserStatus.AbleAnswer) {
-                    log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
-                    player.setUserStatus(UserStatus.Gaming);
-                    SseUtil.sendToClient(player.getEmitter(), "timeOut", "제한시간이 만료되었습니다.");
+                log.info(" 제한시간 만료" + " [ userID : " + userId + ", battleId : " + battleId + " ]");
+                player.setUserStatus(UserStatus.Gaming);
+                SseUtil.sendToClient(player.getEmitter(), "timeOut", "제한시간이 만료되었습니다.");
 
-                    if (battle.getType() == BattleType.ONEQUESTION && player != null)
-                        player.getEmitter().complete();
-                }
+                if (battle.getType() == BattleType.ONEQUESTION)
+                    player.getEmitter().complete();
             }
         },1000*20);             //문제 제한시간
 
@@ -96,24 +93,33 @@ public class BattleController {
                 int questionIdx = battle.getQuestionIdxByUserId(answer.getUserId()) + 1;
                 Boolean isCorrect = questionService.checkAnswer(answer, battle);
 
-                for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
-                    SseEmitter emitter = battle.getPlayers().get(key).getEmitter();
-                    SseUtil.sendToClient(emitter, "answer-result",
+                if(isCorrect) {
+                    player.getAnswerTimer().cancel();
+                    player.getOpponent().getAnswerTimer().cancel();
+                    if(battle.getType() == BattleType.ONEQUESTION){
+                        player.getOpponent().setUserStatus(UserStatus.Gaming);
+                        player.setUserStatus(UserStatus.Gaming);
+
+                        for (String key : battle.getPlayers().keySet()) {                           // 해당 배틀에 참여중인 상대방 & 자신에게 정답 여부 전달 (sse)
+                            SseEmitter emitter = battle.getPlayers().get(key).getEmitter();
+                            SseUtil.sendToClient(emitter, "answer-result",
+                                    AnswerResultDto.builder()
+                                            .userId(answer.getUserId())
+                                            .questionIdx(Integer.toString(questionIdx))
+                                            .isCorrect(true)
+                                            .build());
+                            emitter.complete();
+                        }
+
+                    }
+                }else{
+                    SseUtil.sendToClient(player.getEmitter(), "answer-result",
                             AnswerResultDto.builder()
                                     .userId(answer.getUserId())
                                     .questionIdx(Integer.toString(questionIdx))
-                                    .isCorrect(isCorrect)
+                                    .isCorrect(false)
                                     .build());
-
-                    if(isCorrect && battle.getType() == BattleType.ONEQUESTION) {
-                        player.setUserStatus(UserStatus.Gaming);
-                        player.getAnswerTimer().cancel();
-                        player.getOpponent().getAnswerTimer().cancel();
-                        emitter.complete();
-                    }
                 }
-
-
 
                 body = Response.builder()
                         .status(StatusEnum.OK)
